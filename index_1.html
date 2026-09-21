@@ -1,0 +1,1042 @@
+<title>PSN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@500;700;800&display=swap">
+<style>
+:root{
+  --bg:#F7F5F1; --surface:#FFFFFF; --surface-2:#F1ECE3; --text:#1A1814; --text-secondary:#7C7568;
+  --border:#E2DCCF; --accent:#8A6A2E; --gold:#8A6A2E; --success:#3C8C55; --danger:#C4392E; --warning:#B4791E;
+  --chip-bg:#EFE9DE; --chip-text:#4A4438; --overlay:rgba(20,16,8,.45); --fav-bg:rgba(255,255,255,.85);
+  --radius-s:8px; --radius-m:14px; --radius-l:20px;
+  --shadow:0 1px 2px rgba(20,16,8,.05),0 12px 30px rgba(20,16,8,.08);
+  --font-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-display:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-serif:'Fraunces',Georgia,'Times New Roman',serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A0A09; --surface:#18160F; --surface-2:#131210; --text:#F4EFE4; --text-secondary:#A29A88;
+    --border:#332E23; --accent:#8F6E30; --gold:#D2AC5B; --success:#49B36A; --danger:#E0483B; --warning:#D6A23E;
+    --chip-bg:#211E17; --chip-text:#D8D0BE; --overlay:rgba(0,0,0,.62); --fav-bg:rgba(24,22,15,.72);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A0A09; --surface:#18160F; --surface-2:#131210; --text:#F4EFE4; --text-secondary:#A29A88;
+  --border:#332E23; --accent:#8F6E30; --gold:#D2AC5B; --success:#49B36A; --danger:#E0483B; --warning:#D6A23E;
+  --chip-bg:#211E17; --chip-text:#D8D0BE; --overlay:rgba(0,0,0,.62); --fav-bg:rgba(24,22,15,.72);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:15px;line-height:1.4;margin:0;}
+#app{max-width:520px;margin:0 auto;padding:0 16px 92px;min-height:100%;}
+h1,h2,h3{font-family:var(--font-display);margin:0;letter-spacing:-.01em;}
+.viewTitle,.brand-name,.detailTitle,.modalHead h3,.adminHead h3{font-family:var(--font-serif)!important;}
+button{font-family:inherit;}
+::-webkit-scrollbar{display:none;}
+*{scrollbar-width:none;}
+.muted{color:var(--text-secondary);}
+.small{font-size:12.5px;}
+.tabular{font-variant-numeric:tabular-nums;}
+[hidden]{display:none!important;}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:10px;padding:14px 0 10px;background:var(--bg);}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:var(--text);color:var(--gold);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-weight:600;font-size:16px;flex:none;}
+.brand-name{font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand-sub{display:block;font-size:11.5px;color:var(--text-secondary);font-weight:500;margin-top:-2px;}
+.icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;}
+.icon-btn svg{width:18px;height:18px;}
+.icon-btn.ghost{position:relative;}
+.dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--bg);}
+
+.searchbar{padding-bottom:10px;}
+.searchbar input{width:100%;height:42px;border-radius:var(--radius-s);border:1px solid var(--border);background:var(--surface);color:var(--text);padding:0 14px;font-size:15px;outline:none;}
+.searchbar input:focus{border-color:var(--accent);}
+
+.segmented{display:flex;background:var(--chip-bg);border-radius:12px;padding:3px;gap:3px;margin-bottom:10px;}
+.segmented button{flex:1;border:none;background:none;padding:9px 4px;border-radius:9px;font-weight:700;font-size:13.5px;color:var(--chip-text);}
+.segmented button.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+
+.chipsRow{display:flex;gap:8px;overflow-x:auto;padding:4px 0;-webkit-overflow-scrolling:touch;}
+.chip{flex:none;padding:8px 14px;border-radius:999px;background:var(--chip-bg);color:var(--chip-text);font-size:13.5px;font-weight:600;border:1px solid transparent;cursor:pointer;white-space:nowrap;}
+.chip.active{background:var(--text);color:var(--bg);}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 0 12px;}
+select{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-s);padding:7px 10px;font-size:13px;}
+
+.view{padding-top:2px;}
+.viewTitle{font-size:22px;font-weight:800;padding:14px 0 4px;}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:10px;box-shadow:var(--shadow);cursor:pointer;position:relative;display:flex;flex-direction:column;gap:6px;}
+.card .thumb{aspect-ratio:1/1;border-radius:var(--radius-s);background:var(--surface-2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.card .thumb svg{width:60%;height:60%;}
+.favBtn{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:50%;background:var(--fav-bg);border:none;display:flex;align-items:center;justify-content:center;z-index:2;}
+.favBtn svg{width:16px;height:16px;color:var(--danger);}
+.badges{position:absolute;top:6px;left:6px;display:flex;flex-direction:column;gap:4px;z-index:2;}
+.badge{font-size:9px;font-weight:700;padding:4px 7px;border-radius:5px;letter-spacing:.06em;text-transform:uppercase;background:var(--surface);border:1px solid var(--border);color:var(--text);}
+.badge.hit{color:var(--gold);border-color:var(--gold);}
+.badge.new{color:var(--text);border-color:var(--text);}
+.card .model{font-weight:700;font-size:13.5px;line-height:1.25;}
+.card .spec{font-size:11.5px;color:var(--text-secondary);}
+.card .priceRow{display:flex;align-items:baseline;gap:4px;margin-top:2px;}
+.card .price{font-family:var(--font-display);font-weight:800;font-size:15px;}
+.card .fromLbl{font-size:11px;color:var(--text-secondary);}
+
+.empty{text-align:center;color:var(--text-secondary);padding:40px 20px;font-size:14px;}
+
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));}
+.tabbar .tabBtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-secondary);padding:6px 2px;border-radius:12px;cursor:pointer;}
+.tabbar .tabBtn.active{color:var(--text);}
+.tabbar .tabBtn svg{width:22px;height:22px;}
+.tabbar .tabBtn span{font-size:10px;font-weight:600;}
+
+.backdrop{position:fixed;inset:0;background:var(--overlay);z-index:40;}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--surface);border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;padding:14px 18px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow);}
+.sheet .grabber{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 10px;}
+.modal{position:fixed;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:51;background:var(--surface);border-radius:var(--radius-l);padding:20px;box-shadow:var(--shadow);max-height:86vh;overflow-y:auto;}
+.modal.small{max-width:320px;margin:0 auto;}
+#modalBackdrop{z-index:50;}
+#editBackdrop,#confirmBackdrop{z-index:65;}
+#productEditModal,#confirmModal{z-index:66;}
+.modalHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.modalHead h3{font-size:17px;}
+
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:var(--radius-s);padding:10px 12px;font-size:14.5px;font-family:inherit;outline:none;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+.field textarea{resize:vertical;min-height:64px;}
+.field .hint{font-size:11px;color:var(--text-secondary);margin-top:4px;}
+.fieldRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.btn{width:100%;border:none;border-radius:var(--radius-s);padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-primary{background:var(--accent);color:#fff;text-transform:uppercase;letter-spacing:.03em;}
+.btn-secondary{background:var(--chip-bg);color:var(--text);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-ghost{background:none;color:var(--accent);}
+.btn:disabled{opacity:.5;}
+.btnRow{display:flex;gap:10px;}
+.btnRow .btn{flex:1;}
+
+.detailImg{aspect-ratio:1/1;max-width:200px;margin:0 auto 14px;border-radius:var(--radius-m);background:var(--surface-2);display:flex;align-items:center;justify-content:center;}
+.detailImg svg{width:58%;height:58%;}
+.detailTitle{font-size:19px;font-weight:800;font-family:var(--font-display);text-align:center;}
+.detailSub{text-align:center;margin-bottom:4px;}
+.pickBlock{margin:14px 0;}
+.pickBlock label{display:block;font-size:12.5px;font-weight:700;color:var(--text-secondary);margin-bottom:8px;}
+.swatches{display:flex;gap:10px;flex-wrap:wrap;}
+.swatch{width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);}
+.swatch.sel{border-color:var(--gold);}
+.pickChips{display:flex;gap:8px;flex-wrap:wrap;}
+.pickChip{padding:8px 13px;border-radius:10px;background:var(--chip-bg);color:var(--chip-text);font-size:13px;font-weight:600;border:1px solid transparent;cursor:pointer;}
+.pickChip.sel{background:var(--text);color:var(--bg);}
+.detailPriceRow{text-align:center;margin:16px 0 10px;}
+.detailPrice{font-size:26px;font-weight:800;font-family:var(--font-display);}
+.specTable{width:100%;border-collapse:collapse;margin-bottom:14px;}
+.specTable tr{border-bottom:1px solid var(--border);}
+.specTable td{padding:9px 2px;font-size:13.5px;}
+.specTable td:first-child{color:var(--text-secondary);}
+.specTable td:last-child{text-align:right;font-weight:600;}
+
+.statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
+.statTile{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px;}
+.statTile .num{font-family:var(--font-display);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;}
+.statTile .lbl{font-size:11.5px;color:var(--text-secondary);margin-top:2px;}
+
+.faq{border-top:1px solid var(--border);}
+.faqItem{border-bottom:1px solid var(--border);}
+.faqQ{display:flex;justify-content:space-between;align-items:center;padding:14px 2px;cursor:pointer;font-weight:600;font-size:14px;}
+.faqQ svg{width:16px;height:16px;transition:transform .2s;flex:none;}
+.faqItem.open .faqQ svg{transform:rotate(180deg);}
+.faqA{max-height:0;overflow:hidden;color:var(--text-secondary);font-size:13.5px;line-height:1.5;}
+.faqItem.open .faqA{max-height:240px;padding-bottom:14px;}
+.contactCard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:16px;box-shadow:var(--shadow);margin:14px 0;}
+.contactCard .row{display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border);}
+.contactCard .row:last-child{border-bottom:none;}
+
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:70;box-shadow:var(--shadow);max-width:88%;text-align:center;}
+
+.levelRow{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;}
+.levelDot{flex:none;width:38px;height:38px;border-radius:50%;border:none;background:var(--chip-bg);color:var(--chip-text);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;position:relative;}
+.levelDot.current{background:var(--accent);color:#fff;}
+.levelDot.done svg{width:16px;height:16px;}
+.levelDot.locked{opacity:.45;}
+.gameStage{position:relative;border-radius:var(--radius-m);overflow:hidden;background:var(--surface-2);border:1px solid var(--border);touch-action:none;height:240px;}
+.gameStage canvas{width:100%;height:100%;display:block;}
+.gameHud{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;font-family:var(--font-display);font-weight:800;font-size:12.5px;pointer-events:none;}
+.gameHud span{background:rgba(0,0,0,.55);color:#fff;padding:4px 9px;border-radius:8px;}
+.floatText{position:absolute;font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--success);pointer-events:none;transition:transform .6s ease-out,opacity .6s;}
+.gameMsg{text-align:center;font-size:13.5px;font-weight:700;margin:10px 0;min-height:18px;}
+.gameMsg.ok{color:var(--success);}
+.gameMsg.bad{color:var(--danger);}
+.upgradeCard{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px;margin-bottom:10px;}
+.upgradeCard .ui{width:38px;height:38px;border-radius:10px;background:var(--chip-bg);display:flex;align-items:center;justify-content:center;flex:none;}
+.upgradeCard .ui svg{width:19px;height:19px;color:var(--accent);}
+.upgradeCard .ut{flex:1;min-width:0;}
+.upgradeCard .ut b{display:block;font-size:13.5px;}
+.upgradeCard .ut span{font-size:11.5px;color:var(--text-secondary);}
+.upgradeCard button{flex:none;border:none;background:var(--accent);color:#fff;font-weight:700;font-size:12.5px;padding:9px 12px;border-radius:10px;}
+.upgradeCard button:disabled{background:var(--chip-bg);color:var(--text-secondary);}
+.upgradeCard.locked{opacity:.55;}
+.couponRow{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px dashed var(--accent);border-radius:var(--radius-m);padding:12px;margin-bottom:10px;}
+.couponRow code{font-family:var(--font-display);font-weight:800;font-size:14px;flex:1;}
+.couponRow button{border:none;background:var(--chip-bg);padding:8px 10px;border-radius:8px;font-size:12px;font-weight:700;}
+.couponRow.locked{opacity:.5;}
+
+.admin{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;padding:0 16px calc(24px + env(safe-area-inset-bottom,0px));}
+.adminLogin{max-width:340px;margin:18vh auto 0;text-align:center;}
+.adminLogin .icon-btn{margin:0 auto 14px;width:52px;height:52px;}
+.adminLogin .icon-btn svg{width:24px;height:24px;}
+.adminHead{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);display:flex;align-items:center;gap:10px;padding:14px 0 10px;z-index:2;}
+.adminTabs{display:flex;gap:8px;margin-bottom:14px;}
+.adminTabs button{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:12.5px;}
+.adminTabs button.active{background:var(--text);color:var(--bg);border-color:var(--text);}
+.adminRow{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:10px;margin-bottom:8px;}
+.adminRow .thumbSm{width:44px;height:44px;border-radius:9px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex:none;}
+.adminRow .thumbSm svg{width:70%;height:70%;}
+.adminRow .ai{flex:1;min-width:0;}
+.adminRow .ai b{display:block;font-size:13px;}
+.adminRow .ai span{font-size:11.5px;color:var(--text-secondary);}
+.adminRow .aBtns{display:flex;gap:6px;flex:none;}
+.adminRow .aBtns button{width:32px;height:32px;border-radius:8px;border:none;background:var(--chip-bg);display:flex;align-items:center;justify-content:center;}
+.adminRow .aBtns button svg{width:15px;height:15px;}
+.statusPill{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;flex:none;}
+.statusPill.new{background:var(--accent);color:#fff;}
+.statusPill.in_progress{background:var(--warning);color:#fff;}
+.statusPill.done{background:var(--success);color:#fff;}
+.fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;z-index:61;}
+.fab svg{width:22px;height:22px;}
+</style>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">P</div>
+      <div style="min-width:0;">
+        <div class="brand-name">PSN</div>
+        <span class="brand-sub">iPhone с рук и новые</span>
+      </div>
+    </div>
+    <button class="icon-btn" id="searchToggle" aria-label="Поиск"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+    <button class="icon-btn ghost" id="adminGearBtn" aria-label="Панель продавца"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span class="dot" id="adminDot" hidden></span></button>
+  </header>
+
+  <div class="searchbar" id="searchBar" hidden><input id="searchInput" placeholder="Модель…" /></div>
+
+  <main class="view" id="catalogView">
+    <div class="segmented" id="catalogSeg">
+      <button data-seg="used" class="active">Б/У</button>
+      <button data-seg="new">Новые (запечатан)</button>
+    </div>
+    <div class="chipsRow" id="familyChips"></div>
+    <div class="toolbar">
+      <span class="muted small tabular" id="resultCount"></span>
+      <select id="sortSelect">
+        <option value="popular">По популярности</option>
+        <option value="price_asc">Сначала дешевле</option>
+        <option value="price_desc">Сначала дороже</option>
+        <option value="new">Сначала новые</option>
+      </select>
+    </div>
+    <div class="grid" id="productGrid"></div>
+    <p class="empty" id="emptyState" hidden>Ничего не найдено. Попробуйте изменить фильтры или запрос.</p>
+  </main>
+
+  <main class="view" id="favoritesView" hidden>
+    <h2 class="viewTitle">Избранное</h2>
+    <div class="grid" id="favGrid"></div>
+    <p class="empty" id="favEmpty" hidden>Пока пусто. Нажимайте на сердечко у товара, чтобы сохранить его здесь.</p>
+  </main>
+
+  <main class="view" id="gameView" hidden>
+    <h2 class="viewTitle">Мой магазин</h2>
+    <p class="muted small">Нажмите на стеллаж — продавец сходит за телефоном, затем нажмите на клиента — продавец отнесёт телефон ему. Пройдите уровень, пока не закончилось время: с каждым уровнем клиентов больше и они нетерпеливее.</p>
+    <div class="levelRow" id="levelRow"></div>
+    <div class="gameStage" id="gameStage">
+      <canvas id="gameCanvas"></canvas>
+      <div class="gameHud">
+        <span class="tabular" id="hudProgress">0/0</span>
+        <span class="tabular" id="hudTimer">0с</span>
+      </div>
+    </div>
+    <p class="gameMsg" id="gameMsg"></p>
+    <button class="btn btn-primary" id="gameActionBtn">Начать уровень</button>
+    <h3 style="font-size:15px;margin:18px 0 10px;">Улучшения магазина</h3>
+    <div class="upgradeCard">
+      <div class="ui"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+      <div class="ut"><b>Продавец-помощник</b><span id="helperInfo">Клиенты приходят чаще</span></div>
+      <button id="buyHelper"></button>
+    </div>
+    <div class="upgradeCard">
+      <div class="ui"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/></svg></div>
+      <div class="ut"><b>Новая витрина</b><span id="shelfInfo">Больше моделей — выше доход с продажи</span></div>
+      <button id="buyShelf"></button>
+    </div>
+    <div class="upgradeCard">
+      <div class="ui"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.3 2.5"/></svg></div>
+      <div class="ut"><b>Реклама по району</b><span id="adInfo">Клиенты терпеливее ждут своей очереди</span></div>
+      <button id="buyAd"></button>
+    </div>
+    <h3 style="font-size:15px;margin:18px 0 10px;">Награды и достижения</h3>
+    <div id="couponList"></div>
+  </main>
+
+  <main class="view" id="sellView" hidden>
+    <h2 class="viewTitle">Продать свой iPhone</h2>
+    <p class="muted small">Заполните форму — мы оценим устройство и свяжемся с вами.</p>
+    <form id="sellForm">
+      <div class="fieldRow">
+        <div class="field"><label>Модель</label><select id="sellModel" required></select></div>
+        <div class="field"><label>Память</label><select id="sellStorage" required><option>64 ГБ</option><option>128 ГБ</option><option>256 ГБ</option><option>512 ГБ</option><option>1 ТБ</option></select></div>
+      </div>
+      <div class="field"><label>Состояние</label><select id="sellCondition" required><option>Идеальное</option><option>Отличное</option><option>Хорошее</option><option>Со следами износа / не включается</option></select></div>
+      <div class="field"><label>Желаемая цена, ₽ (необязательно)</label><input id="sellPrice" type="number" inputmode="numeric" min="0" placeholder="Например, 35000"/></div>
+      <div class="field"><label>Комментарий</label><textarea id="sellComment" placeholder="Комплектация, дефекты, причина продажи…"></textarea></div>
+      <div class="field"><label>Телефон для связи</label><input id="sellPhone" type="tel" required placeholder="+7 900 000-00-00"/></div>
+      <button class="btn btn-primary" type="submit" id="sellSubmitBtn">Отправить заявку</button>
+    </form>
+  </main>
+
+  <main class="view" id="contactsView" hidden>
+    <h2 class="viewTitle">Контакты</h2>
+    <div class="contactCard">
+      <div class="row"><span class="muted">Режим работы</span><span>Ежедневно, 10:00–21:00</span></div>
+      <div class="row"><span class="muted">Способ получения</span><span>Курьер по городу / самовывоз</span></div>
+      <div class="row"><span class="muted">Оплата</span><span>Карта, перевод, наличные</span></div>
+      <div class="row"><span class="muted">Гарантия</span><span>14 дней б/у · официальная на новые</span></div>
+    </div>
+    <button class="btn btn-primary" id="contactTgBtn" type="button">Написать в Telegram</button>
+    <div class="faq" id="faq"></div>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tabBtn active" data-tab="catalog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Каталог</span></button>
+    <button class="tabBtn" data-tab="game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="12" rx="4"/><path d="M8 10v4M6 12h4"/><circle cx="16" cy="11" r=".8" fill="currentColor" stroke="none"/><circle cx="18" cy="13" r=".8" fill="currentColor" stroke="none"/></svg><span>Игра</span></button>
+    <button class="tabBtn" data-tab="sell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5.5c0-1.9-2.2-3-5-3s-5 1.3-5 3 2.2 2.6 5 3 5 1.1 5 3-2.2 3-5 3-5-1.1-5-3"/></svg><span>Продать</span></button>
+    <button class="tabBtn" data-tab="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg><span>Избранное</span></button>
+    <button class="tabBtn" data-tab="contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg><span>Контакты</span></button>
+  </nav>
+</div>
+
+<div class="backdrop" id="detailBackdrop" hidden></div>
+<section class="sheet" id="detailSheet" hidden></section>
+
+<div class="backdrop" id="modalBackdrop" hidden></div>
+<section class="modal" id="requestModal" hidden></section>
+
+<div class="backdrop" id="confirmBackdrop" hidden></div>
+<section class="modal small" id="confirmModal" hidden></section>
+
+<div class="backdrop" id="editBackdrop" hidden></div>
+<section class="modal" id="productEditModal" hidden></section>
+
+<section class="admin" id="adminOverlay" hidden>
+  <div class="adminLogin" id="adminLogin">
+    <button class="icon-btn" style="pointer-events:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></button>
+    <h3 style="margin-bottom:6px;">Панель продавца</h3>
+    <p class="muted small" style="margin-bottom:16px;">Только для владельца магазина.</p>
+    <form id="adminLoginForm">
+      <div class="field"><input id="adminPassInput" type="password" placeholder="Пароль" required/></div>
+      <button class="btn btn-primary" type="submit">Войти</button>
+    </form>
+    <button class="btn btn-ghost" id="adminCancelBtn" type="button" style="margin-top:8px;">Отмена</button>
+  </div>
+  <div id="adminPanel" hidden>
+    <div class="adminHead">
+      <button class="icon-btn" id="adminCloseBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <h3 style="flex:1;">Панель продавца</h3>
+    </div>
+    <div class="adminTabs">
+      <button data-atab="products" class="active">Товары</button>
+      <button data-atab="requests">Заявки</button>
+      <button data-atab="stats">Статистика</button>
+    </div>
+    <div id="adminProducts"></div>
+    <div id="adminRequests" hidden></div>
+    <div id="adminStats" hidden></div>
+  </div>
+  <button class="fab" id="addProductFab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+</section>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s), $all=s=>Array.from(document.querySelectorAll(s));
+const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+
+const OWNER_TELEGRAM_ID = 0; /* замените на свой числовой Telegram ID — тогда панель будет открываться у вас без пароля */
+const ADMIN_PASSWORD = "admin2026"; /* тестовый пароль для входа вне Telegram. Смените перед реальным запуском */
+
+const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2", unlocked:"ish_unlocked_admin" };
+function safeGet(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
+function safeSet(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+const ICON_HEART_O = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>';
+const ICON_HEART_F = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>';
+const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>';
+const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>';
+const ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+const ICON_CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+const ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M7 10V7a5 5 0 0110 0v3"/></svg>';
+const ICON_PERCENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>';
+const ICON_TRUCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="13" height="10" rx="1"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>';
+const ICON_CABLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4M16 3v4"/><path d="M6 7h12v4a6 6 0 01-12 0V7z"/><path d="M12 17v4"/></svg>';
+
+function phoneSvg(hex){
+  const id = hex.replace('#','');
+  return `<svg viewBox="0 0 100 100"><defs><linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${hex}"/><stop offset="1" stop-color="${shade(hex,-18)}"/></linearGradient></defs>
+  <rect x="27" y="6" width="46" height="88" rx="12" fill="url(#g${id})"/>
+  <rect x="31" y="10" width="38" height="80" rx="8" fill="${shade(hex,28)}" opacity=".9"/>
+  <rect x="42" y="14" width="16" height="5" rx="2.5" fill="rgba(0,0,0,.25)"/>
+  <rect x="31" y="10" width="38" height="26" rx="8" fill="#fff" opacity=".14"/></svg>`;
+}
+function shade(hex, pct){
+  const n = parseInt(hex.slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  const t = pct<0?0:255, p = Math.abs(pct)/100;
+  r=Math.round((t-r)*p+r); g=Math.round((t-g)*p+g); b=Math.round((t-b)*p+b);
+  return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");
+}
+function fmt(n){ return Number(n).toLocaleString("ru-RU")+" ₽"; }
+function haptic(type){ try{ if(tg && tg.HapticFeedback){ if(type==="success"||type==="error"||type==="warning") tg.HapticFeedback.notificationOccurred(type); else tg.HapticFeedback.impactOccurred(type||"light"); } }catch(e){} }
+function showToast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.hidden=true,2400); }
+
+/* ================= CATALOG DATA ================= */
+const USED_COND = [{l:"Хорошее",pct:-0.08,battery:"80–85%"},{l:"Отличное",pct:0,battery:"88–93%"},{l:"Идеальное",pct:0.10,battery:"94–100%"}];
+const NEW_COND = [{l:"Новый, запечатан",pct:0,battery:"100%"}];
+function st(labels,step){ return labels.map((l,i)=>({l,d:i*step})); }
+
+const DEFAULT_USED = [
+ {id:"g13",model:"iPhone 13",family:"iPhone 13",year:2021,basePrice:16900,colors:[{n:"Тёмная ночь",h:"#1d2027"},{n:"Сияющая звезда",h:"#f0ece1"},{n:"Голубой",h:"#4f6d92"},{n:"Розовый",h:"#f0c9ce"},{n:"(PRODUCT)RED",h:"#b1272c"}],storages:st(["128 ГБ","256 ГБ"],4000),conditions:USED_COND,desc:"Лёгкий и быстрый, отличная автономность на каждый день."},
+ {id:"g13p",model:"iPhone 13 Pro",family:"iPhone 13",year:2021,basePrice:26900,colors:[{n:"Графитовый",h:"#54524f"},{n:"Золотой",h:"#f0e4cf"},{n:"Серебристый",h:"#e5e5e2"},{n:"Sierra Blue",h:"#a7c1d9"},{n:"Alpine Green",h:"#5f6d5b"}],storages:st(["128 ГБ","256 ГБ","512 ГБ"],5500),conditions:USED_COND,desc:"ProMotion 120 Гц и тройная камера с оптическим зумом."},
+ {id:"g13pm",model:"iPhone 13 Pro Max",family:"iPhone 13",year:2021,basePrice:29900,colors:[{n:"Графитовый",h:"#54524f"},{n:"Золотой",h:"#f0e4cf"},{n:"Серебристый",h:"#e5e5e2"},{n:"Sierra Blue",h:"#a7c1d9"},{n:"Alpine Green",h:"#5f6d5b"}],storages:st(["128 ГБ","256 ГБ","512 ГБ"],6000),conditions:USED_COND,desc:"Самый большой экран и батарея в линейке 13-й серии."},
+ {id:"g14",model:"iPhone 14",family:"iPhone 14",year:2022,basePrice:22900,colors:[{n:"Синий",h:"#7d93ab"},{n:"Фиолетовый",h:"#d8cbe0"},{n:"Тёмная ночь",h:"#1d1d1f"},{n:"Сияющая звезда",h:"#f0ece1"},{n:"(PRODUCT)RED",h:"#b1272c"},{n:"Жёлтый",h:"#f2e29b"}],storages:st(["128 ГБ","256 ГБ"],4200),conditions:USED_COND,hit:true,desc:"Улучшенная камера и режим Action mode для видео."},
+ {id:"g14p",model:"iPhone 14 Plus",family:"iPhone 14",year:2022,basePrice:25900,colors:[{n:"Синий",h:"#7d93ab"},{n:"Фиолетовый",h:"#d8cbe0"},{n:"Тёмная ночь",h:"#1d1d1f"},{n:"Сияющая звезда",h:"#f0ece1"},{n:"(PRODUCT)RED",h:"#b1272c"},{n:"Жёлтый",h:"#f2e29b"}],storages:st(["128 ГБ","256 ГБ"],4200),conditions:USED_COND,desc:"Большой экран 6.7 дюйма при цене обычной модели."},
+ {id:"g14pro",model:"iPhone 14 Pro",family:"iPhone 14",year:2022,basePrice:34900,colors:[{n:"Space Black",h:"#3b3b3d"},{n:"Серебристый",h:"#e5e5e2"},{n:"Золотой",h:"#f0e0c0"},{n:"Deep Purple",h:"#4e4256"}],storages:st(["128 ГБ","256 ГБ","512 ГБ"],6000),conditions:USED_COND,desc:"Dynamic Island и экран всегда включён."},
+ {id:"g14prom",model:"iPhone 14 Pro Max",family:"iPhone 14",year:2022,basePrice:39900,colors:[{n:"Space Black",h:"#3b3b3d"},{n:"Серебристый",h:"#e5e5e2"},{n:"Золотой",h:"#f0e0c0"},{n:"Deep Purple",h:"#4e4256"}],storages:st(["128 ГБ","256 ГБ","512 ГБ"],6500),conditions:USED_COND,hit:true,desc:"Топовая камера 48 Мп и лучшая автономность 14-й серии."},
+ {id:"g15",model:"iPhone 15",family:"iPhone 15",year:2023,basePrice:32900,colors:[{n:"Розовый",h:"#f4cfd6"},{n:"Жёлтый",h:"#f2e6ab"},{n:"Зелёный",h:"#bdcdb6"},{n:"Синий",h:"#a9c0d3"},{n:"Чёрный",h:"#3a3c3e"}],storages:st(["128 ГБ","256 ГБ"],4500),conditions:USED_COND,desc:"USB-C и Dynamic Island теперь и в базовой модели."},
+ {id:"g15p",model:"iPhone 15 Plus",family:"iPhone 15",year:2023,basePrice:35900,colors:[{n:"Розовый",h:"#f4cfd6"},{n:"Жёлтый",h:"#f2e6ab"},{n:"Зелёный",h:"#bdcdb6"},{n:"Синий",h:"#a9c0d3"},{n:"Чёрный",h:"#3a3c3e"}],storages:st(["128 ГБ","256 ГБ"],4500),conditions:USED_COND,desc:"Экран 6.7 дюйма и большая батарея."},
+ {id:"g15pro",model:"iPhone 15 Pro",family:"iPhone 15",year:2023,basePrice:45900,colors:[{n:"Natural Titanium",h:"#8e8577"},{n:"Blue Titanium",h:"#3e4a55"},{n:"White Titanium",h:"#e9e5da"},{n:"Black Titanium",h:"#3a3a3c"}],storages:st(["128 ГБ","256 ГБ","512 ГБ"],6500),conditions:USED_COND,desc:"Титановый корпус и чип A17 Pro."},
+ {id:"g15prom",model:"iPhone 15 Pro Max",family:"iPhone 15",year:2023,basePrice:52900,colors:[{n:"Natural Titanium",h:"#8e8577"},{n:"Blue Titanium",h:"#3e4a55"},{n:"White Titanium",h:"#e9e5da"},{n:"Black Titanium",h:"#3a3a3c"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],9000),conditions:USED_COND,hit:true,desc:"5-кратный зум и самая мощная камера 15-й серии."},
+ {id:"g16",model:"iPhone 16",family:"iPhone 16",year:2024,basePrice:42900,colors:[{n:"Ultramarine",h:"#7285c2"},{n:"Teal",h:"#93b3ae"},{n:"Розовый",h:"#f2d3d9"},{n:"Белый",h:"#f2f2ee"},{n:"Чёрный",h:"#2c2c2e"}],storages:st(["128 ГБ","256 ГБ"],5000),conditions:USED_COND,desc:"Кнопка Camera Control и чип для Apple Intelligence."},
+ {id:"g16p",model:"iPhone 16 Plus",family:"iPhone 16",year:2024,basePrice:46900,colors:[{n:"Ultramarine",h:"#7285c2"},{n:"Teal",h:"#93b3ae"},{n:"Розовый",h:"#f2d3d9"},{n:"Белый",h:"#f2f2ee"},{n:"Чёрный",h:"#2c2c2e"}],storages:st(["128 ГБ","256 ГБ"],5000),conditions:USED_COND,desc:"Экран 6.7 дюйма и увеличенное время работы."},
+ {id:"g16pro",model:"iPhone 16 Pro",family:"iPhone 16",year:2024,basePrice:57900,colors:[{n:"Desert Titanium",h:"#b1a284"},{n:"Natural Titanium",h:"#8e8577"},{n:"White Titanium",h:"#e9e5da"},{n:"Black Titanium",h:"#3a3a3c"}],storages:st(["128 ГБ","256 ГБ","512 ГБ"],7000),conditions:USED_COND,desc:"Экран чуть больше и новая Ultra Wide камера."},
+ {id:"g16prom",model:"iPhone 16 Pro Max",family:"iPhone 16",year:2024,basePrice:64900,colors:[{n:"Desert Titanium",h:"#b1a284"},{n:"Natural Titanium",h:"#8e8577"},{n:"White Titanium",h:"#e9e5da"},{n:"Black Titanium",h:"#3a3a3c"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],10000),conditions:USED_COND,hit:true,desc:"Самая большая батарея среди iPhone на момент выхода."},
+ {id:"g17",model:"iPhone 17",family:"iPhone 17",year:2025,basePrice:54900,colors:[{n:"Lavender",h:"#c9c2de"},{n:"Sage",h:"#b3bfa8"},{n:"Mist Blue",h:"#aab9c4"},{n:"Белый",h:"#f2f2ee"},{n:"Чёрный",h:"#2c2c2e"}],storages:st(["128 ГБ","256 ГБ","512 ГБ"],6500),conditions:USED_COND,desc:"Новые цвета и более тонкие рамки экрана."},
+ {id:"g17air",model:"iPhone 17 Air",family:"iPhone 17",year:2025,basePrice:62900,colors:[{n:"Sky Blue",h:"#a9c7dd"},{n:"Light Gold",h:"#e6d3ab"},{n:"Cloud White",h:"#f2f2ee"},{n:"Space Black",h:"#2c2c2e"}],storages:st(["256 ГБ","512 ГБ"],7500),conditions:USED_COND,hit:true,desc:"Самый тонкий iPhone линейки, пришёл на смену Plus."},
+ {id:"g17pro",model:"iPhone 17 Pro",family:"iPhone 17",year:2025,basePrice:74900,colors:[{n:"Cosmic Orange",h:"#c9622f"},{n:"Deep Blue",h:"#2e4a6b"},{n:"Серебристый",h:"#e3e3e0"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],11000),conditions:USED_COND,desc:"Новый дизайн камеры и чип A19 Pro."},
+ {id:"g17prom",model:"iPhone 17 Pro Max",family:"iPhone 17",year:2025,basePrice:82900,colors:[{n:"Cosmic Orange",h:"#c9622f"},{n:"Deep Blue",h:"#2e4a6b"},{n:"Серебристый",h:"#e3e3e0"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],12000),conditions:USED_COND,hit:true,desc:"Топ модель на вторичном рынке — почти как новая, но дешевле."}
+];
+const DEFAULT_NEW = [
+ {id:"n18pro",model:"iPhone 18 Pro",family:"iPhone 18",year:2026,isNew:true,basePrice:124990,colors:[{n:"Black",h:"#2b2b2d"},{n:"Silver",h:"#e3e3e0"},{n:"Glacier",h:"#cfe0e3"},{n:"Burgundy",h:"#5a2430"}],storages:st(["256 ГБ","512 ГБ","1 ТБ","2 ТБ"],20000),conditions:NEW_COND,hit:true,desc:"Новый, в заводской плёнке. Официальная поставка, гарантия Apple."},
+ {id:"n18prom",model:"iPhone 18 Pro Max",family:"iPhone 18",year:2026,isNew:true,basePrice:134990,colors:[{n:"Black",h:"#2b2b2d"},{n:"Silver",h:"#e3e3e0"},{n:"Glacier",h:"#cfe0e3"},{n:"Burgundy",h:"#5a2430"}],storages:st(["256 ГБ","512 ГБ","1 ТБ","2 ТБ"],22000),conditions:NEW_COND,desc:"Самый большой экран и автономность в истории iPhone. Запечатан, не вскрывался."}
+];
+
+function getUsed(){ return safeGet(LS.products+"_used", null) || DEFAULT_USED.map(p=>({...p})); }
+function getNew(){ return safeGet(LS.products+"_new", null) || DEFAULT_NEW.map(p=>({...p})); }
+function saveUsed(list){ safeSet(LS.products+"_used", list); usedModels=list; renderAll(); }
+function saveNew(list){ safeSet(LS.products+"_new", list); newModels=list; renderAll(); }
+let usedModels = getUsed(), newModels = getNew();
+function allModels(){ return usedModels.concat(newModels); }
+function findModel(id){ return allModels().find(m=>m.id===id); }
+
+function priceOf(m, sIdx, cIdx){ return Math.round(((m.basePrice||0) + (m.storages[sIdx]?m.storages[sIdx].d:0)) * (1 + (m.conditions[cIdx]?m.conditions[cIdx].pct:0)) / 100) * 100; }
+function minPrice(m){ return priceOf(m,0,0); }
+
+function getFavs(){ return new Set(safeGet(LS.favs, [])); }
+function saveFavs(set){ safeSet(LS.favs, Array.from(set)); }
+function getRequests(){ return safeGet(LS.requests, []); }
+function saveRequests(list){ safeSet(LS.requests, list); }
+
+/* ---------- STATE ---------- */
+const state = { view:"catalog", seg:"used", family:"all", search:"", sort:"popular" };
+
+function currentSet(){ return state.seg==="used" ? usedModels : newModels; }
+function uniqueFamilies(){ return Array.from(new Set(currentSet().map(m=>m.family))); }
+
+$all("[data-seg]").forEach(b=> b.addEventListener("click", ()=>{ state.seg=b.dataset.seg; state.family="all"; $all("[data-seg]").forEach(x=>x.classList.toggle("active",x===b)); renderFamilyChips(); renderCatalog(); }));
+
+function renderFamilyChips(){
+  const fams = uniqueFamilies();
+  $("#familyChips").hidden = fams.length<=1;
+  $("#familyChips").innerHTML = ["all",...fams].map(f=>`<button class="chip ${state.family===f?"active":""}" data-fam="${f}">${f==="all"?"Все":f}</button>`).join("");
+}
+document.addEventListener("click", e=>{
+  const fc=e.target.closest("[data-fam]"); if(fc){ state.family=fc.dataset.fam; renderFamilyChips(); renderCatalog(); }
+});
+
+function filteredList(){
+  let list = currentSet().filter(m=>{
+    if(state.family!=="all" && m.family!==state.family) return false;
+    if(state.search){ if(!m.model.toLowerCase().includes(state.search.toLowerCase())) return false; }
+    return true;
+  });
+  if(state.sort==="price_asc") list = list.slice().sort((a,b)=>minPrice(a)-minPrice(b));
+  else if(state.sort==="price_desc") list = list.slice().sort((a,b)=>minPrice(b)-minPrice(a));
+  else if(state.sort==="new") list = list.slice().sort((a,b)=>b.year-a.year);
+  else list = list.slice().sort((a,b)=>(b.hit?1:0)-(a.hit?1:0));
+  return list;
+}
+function cardHtml(m){
+  const favs=getFavs();
+  return `<div class="card" data-open="${m.id}">
+    <div class="thumb">
+      <div class="badges">${m.isNew?'<span class="badge new">Новинка</span>':""}${m.hit?'<span class="badge hit">Хит</span>':""}</div>
+      <button class="favBtn" data-fav="${m.id}">${favs.has(m.id)?ICON_HEART_F:ICON_HEART_O}</button>
+      ${phoneSvg(m.colors[0].h)}
+    </div>
+    <div class="model">${m.model}</div>
+    <div class="spec">${m.colors.length} цвет${m.colors.length===1?"":m.colors.length<5?"а":"ов"} · от ${m.storages[0].l}</div>
+    <div class="priceRow"><span class="fromLbl">от</span><span class="price tabular">${fmt(minPrice(m))}</span></div>
+  </div>`;
+}
+function renderCatalog(){
+  const list = filteredList();
+  $("#productGrid").innerHTML = list.map(cardHtml).join("");
+  $("#resultCount").textContent = list.length+" из "+currentSet().length;
+  $("#emptyState").hidden = list.length>0;
+  $("#productGrid").hidden = list.length===0;
+}
+function renderFavorites(){
+  const favs=getFavs();
+  const list = allModels().filter(m=>favs.has(m.id));
+  $("#favGrid").innerHTML = list.map(cardHtml).join("");
+  $("#favEmpty").hidden = list.length>0;
+  $("#favGrid").hidden = list.length===0;
+}
+document.addEventListener("click", e=>{
+  const fav=e.target.closest("[data-fav]");
+  if(fav){ e.stopPropagation(); const id=fav.dataset.fav; const favs=getFavs(); favs.has(id)?favs.delete(id):favs.add(id); saveFavs(favs); haptic("light"); renderCatalog(); renderFavorites(); return; }
+  const open=e.target.closest("[data-open]"); if(open){ openPicker(open.dataset.open); }
+});
+$("#sortSelect").addEventListener("change", e=>{ state.sort=e.target.value; renderCatalog(); });
+$("#searchToggle").addEventListener("click", ()=>{ const sb=$("#searchBar"); sb.hidden=!sb.hidden; if(!sb.hidden) $("#searchInput").focus(); });
+$("#searchInput").addEventListener("input", e=>{ state.search=e.target.value; renderCatalog(); });
+
+/* ---------- VARIANT PICKER SHEET ---------- */
+let pick = null; // {modelId, colorIdx, storageIdx, condIdx}
+function openPicker(id){
+  const m = findModel(id); if(!m) return;
+  pick = {modelId:id, colorIdx:0, storageIdx:0, condIdx: m.conditions.length>1?1:0};
+  renderPicker();
+  $("#detailSheet").hidden=false; $("#detailBackdrop").hidden=false;
+  try{ if(tg && tg.BackButton){ tg.BackButton.show(); tg.BackButton.onClick(closeDetail); } }catch(e){}
+}
+function renderPicker(){
+  const m = findModel(pick.modelId); if(!m) return;
+  const price = priceOf(m, pick.storageIdx, pick.condIdx);
+  const cond = m.conditions[pick.condIdx];
+  $("#detailSheet").innerHTML = `
+    <div class="grabber"></div>
+    <div class="detailImg">${phoneSvg(m.colors[pick.colorIdx].h)}</div>
+    <div class="detailTitle">${m.model}</div>
+    <div class="detailSub muted small">${m.colors[pick.colorIdx].n} · ${m.storages[pick.storageIdx].l}</div>
+    <div class="pickBlock"><label>Цвет</label><div class="swatches" id="pkColors"></div></div>
+    <div class="pickBlock"><label>Память</label><div class="pickChips" id="pkStorages"></div></div>
+    ${m.conditions.length>1?`<div class="pickBlock"><label>Состояние</label><div class="pickChips" id="pkConds"></div></div>`:`<div class="pickBlock"><label>Состояние</label><div class="muted small">Новый, запечатан в заводской плёнке</div></div>`}
+    <div class="detailPriceRow"><span class="detailPrice tabular">${fmt(price)}</span></div>
+    <table class="specTable">
+      <tr><td>Состояние</td><td>${cond.l}</td></tr>
+      <tr><td>Ёмкость батареи</td><td>${cond.battery}</td></tr>
+      <tr><td>Год выпуска</td><td>${m.year}</td></tr>
+      <tr><td>Гарантия</td><td>${m.isNew?"официальная Apple":"14 дней магазина"}</td></tr>
+    </table>
+    <p class="muted small" style="margin-bottom:16px;">${m.desc||""}</p>
+    <div class="btnRow">
+      <button class="btn btn-secondary" id="detailFavBtn">${getFavs().has(m.id)?"В избранном ♥":"В избранное"}</button>
+      <button class="btn btn-primary" id="detailBuyBtn">Оставить заявку</button>
+    </div>`;
+  $("#pkColors").innerHTML = m.colors.map((c,i)=>`<button class="swatch ${i===pick.colorIdx?"sel":""}" data-pk="color" data-i="${i}" style="background:${c.h};" title="${c.n}"></button>`).join("");
+  $("#pkStorages").innerHTML = m.storages.map((s,i)=>`<button class="pickChip ${i===pick.storageIdx?"sel":""}" data-pk="storage" data-i="${i}">${s.l}</button>`).join("");
+  if(m.conditions.length>1) $("#pkConds").innerHTML = m.conditions.map((c,i)=>`<button class="pickChip ${i===pick.condIdx?"sel":""}" data-pk="cond" data-i="${i}">${c.l}</button>`).join("");
+  $("#detailFavBtn").onclick=()=>{ const favs=getFavs(); favs.has(m.id)?favs.delete(m.id):favs.add(m.id); saveFavs(favs); renderPicker(); renderCatalog(); renderFavorites(); };
+  $("#detailBuyBtn").onclick=()=>openRequestModal(m, pick);
+}
+document.addEventListener("click", e=>{
+  const pk = e.target.closest("[data-pk]"); if(!pk || !pick) return;
+  const i = Number(pk.dataset.i);
+  if(pk.dataset.pk==="color") pick.colorIdx=i;
+  if(pk.dataset.pk==="storage") pick.storageIdx=i;
+  if(pk.dataset.pk==="cond") pick.condIdx=i;
+  haptic("light"); renderPicker();
+});
+function closeDetail(){ $("#detailSheet").hidden=true; $("#detailBackdrop").hidden=true; try{ if(tg && tg.BackButton) tg.BackButton.hide(); }catch(e){} }
+$("#detailBackdrop").addEventListener("click", closeDetail);
+
+/* ---------- REQUEST MODAL (buy lead) ---------- */
+function openRequestModal(m, pk){
+  const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+  const price = priceOf(m, pk.storageIdx, pk.condIdx);
+  const title = `${m.model}, ${m.colors[pk.colorIdx].n}, ${m.storages[pk.storageIdx].l}, ${m.conditions[pk.condIdx].l}`;
+  $("#requestModal").innerHTML = `
+    <div class="modalHead"><h3>Заявка на покупку</h3><button class="icon-btn" id="reqCloseBtn">${ICON_CLOSE}</button></div>
+    <p class="muted small" style="margin-bottom:12px;">${title} — ${fmt(price)}</p>
+    <form id="reqForm">
+      <div class="field"><label>Имя</label><input id="reqName" required value="${tgUser?(tgUser.first_name||""):""}"/></div>
+      <div class="field"><label>Телефон</label><input id="reqPhone" type="tel" required placeholder="+7 900 000-00-00"/></div>
+      <div class="field"><label>Комментарий</label><textarea id="reqComment" placeholder="Удобное время связи, вопросы…"></textarea></div>
+      <button class="btn btn-primary" type="submit" id="reqSubmitBtn">Отправить</button>
+    </form>`;
+  $("#requestModal").hidden=false; $("#modalBackdrop").hidden=false;
+  $("#reqCloseBtn").onclick=closeRequestModal;
+  $("#reqForm").onsubmit=e=>{
+    e.preventDefault();
+    const req={id:"r"+Date.now(),type:"buy",title:title,price:price,name:$("#reqName").value,phone:$("#reqPhone").value,comment:$("#reqComment").value,date:new Date().toISOString(),status:"new"};
+    const list=getRequests(); list.unshift(req); saveRequests(list);
+    try{ if(tg && tg.sendData) tg.sendData(JSON.stringify(req)); }catch(err){}
+    haptic("success"); closeRequestModal(); closeDetail(); showToast("Заявка отправлена! Мы скоро свяжемся с вами.");
+    updateAdminDot();
+  };
+  try{
+    if(tg && tg.MainButton){
+      tg.MainButton.setText("Отправить заявку"); tg.MainButton.show();
+      tg.MainButton.onClick(()=>$("#reqForm").requestSubmit());
+      $("#reqSubmitBtn").style.display="none";
+    }
+  }catch(e){}
+}
+function closeRequestModal(){ $("#requestModal").hidden=true; $("#modalBackdrop").hidden=true; try{ if(tg && tg.MainButton) tg.MainButton.hide(); }catch(e){} }
+$("#modalBackdrop").addEventListener("click", closeRequestModal);
+
+/* ---------- SELL / TRADE-IN ---------- */
+function renderSellView(){ $("#sellModel").innerHTML = Array.from(new Set(usedModels.map(m=>m.model))).map(m=>`<option>${m}</option>`).join(""); }
+$("#sellForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const req={id:"r"+Date.now(),type:"sell",title:$("#sellModel").value+" "+$("#sellStorage").value,condition:$("#sellCondition").value,price:$("#sellPrice").value||null,comment:$("#sellComment").value,phone:$("#sellPhone").value,date:new Date().toISOString(),status:"new"};
+  const list=getRequests(); list.unshift(req); saveRequests(list);
+  try{ if(tg && tg.sendData) tg.sendData(JSON.stringify(req)); }catch(err){}
+  haptic("success"); e.target.reset(); showToast("Заявка на выкуп отправлена!"); updateAdminDot();
+});
+
+/* ---------- CONTACTS / FAQ ---------- */
+const FAQ = [
+ {q:"Даёте ли вы гарантию?",a:"На б/у устройства — 14 дней гарантии магазина. Новые запечатанные iPhone продаются с официальной гарантией Apple."},
+ {q:"Как проверяется состояние iPhone?",a:"Каждый б/у телефон проходит диагностику: экран, батарея, камеры, все датчики и разъёмы, проверка на блокировки iCloud/FMI."},
+ {q:"Можно ли сдать свой iPhone в счёт покупки?",a:"Да, оставьте заявку во вкладке «Продать» — мы оценим устройство и предложим цену, которую можно зачесть при покупке."},
+ {q:"Чем новые устройства отличаются от б/у?",a:"Новые iPhone запечатаны в заводской плёнке, не активировались и продаются с гарантией Apple — раздел «Новые» в каталоге."},
+ {q:"Как происходит доставка?",a:"Курьером по городу в день заказа или самовывозом. Оплата — после проверки устройства."}
+];
+function renderFaq(){ $("#faq").innerHTML = FAQ.map((f,i)=>`<div class="faqItem" data-i="${i}"><div class="faqQ">${f.q}${ICON_CHEV}</div><div class="faqA">${f.a}</div></div>`).join(""); }
+document.addEventListener("click", e=>{ const q=e.target.closest(".faqQ"); if(q) q.parentElement.classList.toggle("open"); });
+$("#contactTgBtn").addEventListener("click", ()=>{
+  try{ if(tg && tg.openTelegramLink){ tg.openTelegramLink("https://t.me/"); return; } }catch(e){}
+  showToast("Откройте чат магазина в Telegram");
+});
+
+/* ---------- TABS ---------- */
+function switchTab(name){
+  state.view=name;
+  ["catalog","favorites","game","sell","contacts"].forEach(v=>{ $("#"+v+"View").hidden = v!==name; });
+  $all(".tabBtn").forEach(b=> b.classList.toggle("active", b.dataset.tab===name));
+  if(name==="favorites") renderFavorites();
+  if(name==="game") { renderGamePanel(); renderLevelRow(); setupCanvasIfNeeded(); }
+  if(name==="sell") renderSellView();
+  window.scrollTo(0,0);
+}
+$all(".tabBtn").forEach(b=> b.addEventListener("click", ()=>{ haptic("light"); switchTab(b.dataset.tab); }));
+
+/* ---------- CONFIRM DIALOG ---------- */
+function confirmDialog(text, onYes, danger){
+  $("#confirmModal").innerHTML = `<p style="margin:0 0 16px;font-size:14.5px;">${text}</p><div class="btnRow"><button class="btn btn-secondary" id="cfNo">Отмена</button><button class="btn ${danger===false?"btn-primary":"btn-danger"}" id="cfYes">${danger===false?"Ок":"Удалить"}</button></div>`;
+  $("#confirmModal").hidden=false; $("#confirmBackdrop").hidden=false;
+  $("#cfNo").onclick=()=>{ $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; };
+  $("#cfYes").onclick=()=>{ $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; onYes(); };
+}
+$("#confirmBackdrop").addEventListener("click", ()=>{ $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; });
+
+/* ================= SHOP-TYCOON GAME WITH LEVELS ================= */
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function defaultShop(){ return { coins:0, lifetime:0, helper:0, shelf:0, ad:0, claimed:[], unlockedLevel:1, levelIdx:0 }; }
+let shop = safeGet(LS.shop, null) || defaultShop();
+function saveShop(){ safeSet(LS.shop, shop); }
+
+const LEVELS = [
+ {target:5, time:40, spawnInterval:2200, patience:4500, lanes:1},
+ {target:7, time:40, spawnInterval:1900, patience:4200, lanes:1},
+ {target:9, time:45, spawnInterval:1650, patience:3900, lanes:2},
+ {target:11, time:45, spawnInterval:1400, patience:3600, lanes:2},
+ {target:13, time:50, spawnInterval:1200, patience:3300, lanes:2},
+ {target:16, time:55, spawnInterval:1000, patience:3000, lanes:2}
+];
+const ACHIEVEMENTS = [
+ {code:"SAVE5", label:"−5% на покупку", desc:"Заработайте 300 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=300},
+ {code:"FREESHIP", label:"Бесплатная доставка", desc:"Пройдите 3-й уровень магазина", icon:ICON_TRUCK, need:s=>s.unlockedLevel>=4},
+ {code:"SAVE10", label:"−10% на покупку", desc:"Заработайте 1200 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=1200},
+ {code:"SAVE15", label:"−15% на покупку", desc:"Заработайте 3000 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=3000},
+ {code:"FREECABLE", label:"Кабель в подарок", desc:"Пройдите все уровни магазина", icon:ICON_CABLE, need:s=>s.unlockedLevel>LEVELS.length}
+];
+function upgradeCost(base, level){ return Math.round(base*Math.pow(1.55, level)); }
+function spawnInterval(lv){ return Math.max(500, lv.spawnInterval * (1 - shop.helper*0.09)); }
+function patienceMs(lv){ return lv.patience * (1 + shop.ad*0.16); }
+function coinPerSale(){ return 8 + shop.shelf*4; }
+
+function renderGamePanel(){
+  const hc = upgradeCost(80, shop.helper), sc = upgradeCost(120, shop.shelf), ac = upgradeCost(100, shop.ad);
+  $("#helperInfo").textContent = "Ур. "+shop.helper+" · клиенты приходят чаще";
+  $("#shelfInfo").textContent = "Ур. "+shop.shelf+" · +доход с продажи";
+  $("#adInfo").textContent = "Ур. "+shop.ad+" · дольше ждут очереди";
+  $("#buyHelper").textContent = hc+" ₽"; $("#buyHelper").disabled = shop.coins<hc;
+  $("#buyShelf").textContent = sc+" ₽"; $("#buyShelf").disabled = shop.coins<sc;
+  $("#buyAd").textContent = ac+" ₽"; $("#buyAd").disabled = shop.coins<ac;
+  renderAchievements();
+}
+function renderAchievements(){
+  $("#couponList").innerHTML = ACHIEVEMENTS.map(a=>{
+    const claimed = shop.claimed.includes(a.code);
+    const reached = a.need(shop);
+    let statusText, btnHtml;
+    if(claimed){ statusText = "Код: "+a.code; btnHtml = `<button data-copy="${a.code}">Копировать</button>`; }
+    else if(reached){ statusText = "Готово к получению"; btnHtml = `<button data-claim="${a.code}">Получить</button>`; }
+    else { statusText = a.desc; btnHtml = `<button disabled>Закрыто</button>`; }
+    return `<div class="upgradeCard${(!reached&&!claimed)?" locked":""}">
+      <div class="ui">${a.icon}</div>
+      <div class="ut"><b>${a.label}</b><span>${statusText}</span></div>
+      ${btnHtml}
+    </div>`;
+  }).join("");
+}
+document.addEventListener("click", e=>{
+  const cl=e.target.closest("[data-claim]"); if(cl){ shop.claimed.push(cl.dataset.claim); saveShop(); renderGamePanel(); haptic("success"); showToast("Промокод получен! Покажите его продавцу при заказе."); }
+  const cp=e.target.closest("[data-copy]"); if(cp){ const code=cp.dataset.copy; try{ navigator.clipboard.writeText(code); }catch(err){} showToast("Промокод "+code+" скопирован"); }
+});
+$("#buyHelper").addEventListener("click", ()=>{ const c=upgradeCost(80,shop.helper); if(shop.coins>=c){ shop.coins-=c; shop.helper++; saveShop(); renderGamePanel(); haptic("light"); } });
+$("#buyShelf").addEventListener("click", ()=>{ const c=upgradeCost(120,shop.shelf); if(shop.coins>=c){ shop.coins-=c; shop.shelf++; saveShop(); renderGamePanel(); haptic("light"); } });
+$("#buyAd").addEventListener("click", ()=>{ const c=upgradeCost(100,shop.ad); if(shop.coins>=c){ shop.coins-=c; shop.ad++; saveShop(); renderGamePanel(); haptic("light"); } });
+
+function renderLevelRow(){
+  $("#levelRow").innerHTML = LEVELS.map((lv,i)=>{
+    const n=i+1, unlocked = n<=shop.unlockedLevel, done = n<shop.unlockedLevel, current = i===shop.levelIdx;
+    const cls = "levelDot"+(current?" current":"")+(!unlocked?" locked":"")+(done?" done":"");
+    return `<button class="${cls}" data-level="${i}">${done?ICON_CHECK:(unlocked?n:ICON_LOCK)}</button>`;
+  }).join("");
+}
+document.addEventListener("click", e=>{
+  const lv=e.target.closest("[data-level]"); if(!lv) return;
+  const i=Number(lv.dataset.level);
+  if(i+1>shop.unlockedLevel){ showToast("Сначала пройдите предыдущий уровень"); return; }
+  if(G.levelStatus==="playing") return;
+  shop.levelIdx=i; saveShop(); renderLevelRow(); resetLevelUI();
+});
+
+const G = { ctx:null, w:0, h:0, raf:null, lastTs:0, customers:[], spawnTimer:0, levelStatus:"idle", served:0, timeLeft:0, timerInt:null,
+  player:{x:60,y:0,carrying:false,action:"idle",target:null,targetId:null}, shelfPos:{x:34,y:0} };
+
+function laneY(){ return G.h - 70; }
+function shelfY(){ return 56; }
+function laneSlot(i){ return laneY() + i*38 - (currentLevel().lanes>1?19:0); }
+function currentLevel(){ return LEVELS[shop.levelIdx]; }
+
+function setupCanvasIfNeeded(){
+  const stage=$("#gameStage"), canvas=$("#gameCanvas");
+  const rect=stage.getBoundingClientRect(); if(rect.width===0) return;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=rect.width*dpr; canvas.height=rect.height*dpr;
+  canvas.style.width=rect.width+"px"; canvas.style.height=rect.height+"px";
+  G.ctx=canvas.getContext("2d"); G.ctx.setTransform(dpr,0,0,dpr,0,0);
+  G.w=rect.width; G.h=rect.height;
+  G.player.y = laneY(); G.shelfPos.y = shelfY()+30;
+  if(!G.raf){ G.lastTs=performance.now(); G.raf=requestAnimationFrame(gameLoop); }
+  canvas.onpointerdown = handlePointer;
+  drawGame();
+}
+function resetLevelUI(){
+  G.levelStatus="idle"; G.customers=[]; G.served=0; G.timeLeft=currentLevel().time; G.player={x:60,y:laneY(),carrying:false,action:"idle",target:null,targetId:null};
+  clearInterval(G.timerInt);
+  $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent="Начать уровень "+(shop.levelIdx+1);
+  $("#gameMsg").textContent=""; $("#gameMsg").className="gameMsg";
+  updateHud(); drawGame();
+}
+function updateHud(){
+  $("#hudProgress").textContent = G.served+"/"+currentLevel().target;
+  $("#hudTimer").textContent = Math.max(0,Math.ceil(G.timeLeft))+"с";
+}
+$("#gameActionBtn").addEventListener("click", ()=>{
+  if(G.levelStatus==="cleared"){
+    const nextIdx = shop.levelIdx+1;
+    if(nextIdx<LEVELS.length){ shop.levelIdx=nextIdx; if(shop.unlockedLevel<nextIdx+1) shop.unlockedLevel=nextIdx+1; saveShop(); renderLevelRow(); resetLevelUI(); }
+    else { showToast("Все уровни пройдены! Можно переигрывать любой."); resetLevelUI(); }
+    return;
+  }
+  if(G.levelStatus==="failed"){ resetLevelUI(); return; }
+  startLevel();
+});
+function startLevel(){
+  G.levelStatus="playing"; G.customers=[]; G.served=0; G.spawnTimer=0; G.timeLeft=currentLevel().time;
+  G.player={x:60,y:laneY(),carrying:false,action:"idle",target:null,targetId:null};
+  $("#gameActionBtn").hidden=true; $("#gameMsg").textContent=""; $("#gameMsg").className="gameMsg";
+  updateHud();
+  clearInterval(G.timerInt);
+  G.timerInt=setInterval(()=>{
+    if(G.levelStatus!=="playing") return;
+    G.timeLeft -= 1; updateHud();
+    if(G.timeLeft<=0){ failLevel(); }
+  },1000);
+}
+function clearLevel(){
+  G.levelStatus="cleared"; clearInterval(G.timerInt);
+  const bonus = Math.max(0,Math.round(G.timeLeft))*2;
+  shop.coins+=bonus; shop.lifetime+=bonus; saveShop(); renderGamePanel();
+  const n=shop.levelIdx+1;
+  if(shop.unlockedLevel<n+1){ shop.unlockedLevel=n+1; saveShop(); renderLevelRow(); }
+  $("#gameMsg").textContent="Уровень пройден! Бонус +"+bonus+" ₽"; $("#gameMsg").className="gameMsg ok";
+  $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent = (shop.levelIdx+1<LEVELS.length)?"Следующий уровень":"Начать заново";
+  haptic("success"); updateHud();
+}
+function failLevel(){
+  G.levelStatus="failed"; clearInterval(G.timerInt);
+  $("#gameMsg").textContent="Время вышло: "+G.served+"/"+currentLevel().target+". Попробуем ещё раз?"; $("#gameMsg").className="gameMsg bad";
+  $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent="Повторить уровень";
+  haptic("error");
+}
+function spawnCustomer(){
+  const lv=currentLevel();
+  if(G.customers.length >= lv.lanes) return;
+  const usedLanes = G.customers.map(c=>c.lane);
+  let lane=0; for(let i=0;i<lv.lanes;i++){ if(!usedLanes.includes(i)){ lane=i; break; } }
+  G.customers.push({id:"c"+Date.now()+Math.random(), x:G.w+20, y:laneSlot(lane), lane, state:"walking", patience:patienceMs(lv), targetX: G.w-70 - lane*4});
+}
+function handlePointer(ev){
+  if(G.levelStatus!=="playing") return;
+  const rect=ev.target.getBoundingClientRect();
+  const x=ev.clientX-rect.left, y=ev.clientY-rect.top;
+  if(G.player.action!=="idle") return;
+  const dShelf = Math.hypot(x-G.shelfPos.x, y-G.shelfPos.y);
+  if(dShelf<30){
+    if(G.player.carrying){ showToast("Вы уже несёте телефон клиенту"); return; }
+    G.player.action="toShelf"; G.player.target={x:G.shelfPos.x+16,y:G.shelfPos.y+6}; return;
+  }
+  for(const c of G.customers){
+    if(c.state==="waiting" && Math.hypot(x-c.x,y-c.y)<28){
+      if(!G.player.carrying){ showToast("Сначала возьмите телефон со стеллажа"); return; }
+      G.player.action="toCustomer"; G.player.target={x:c.x-14,y:c.y}; G.player.targetId=c.id; return;
+    }
+  }
+}
+function spawnFloatText(text,x,y){
+  const el=document.createElement("div"); el.className="floatText"; el.textContent=text;
+  el.style.left=x+"px"; el.style.top=y+"px";
+  $("#gameStage").appendChild(el);
+  requestAnimationFrame(()=>{ el.style.transform="translateY(-24px)"; el.style.opacity="0"; });
+  setTimeout(()=>el.remove(),650);
+}
+function gameLoop(ts){
+  const dt=Math.min(60, ts-G.lastTs); G.lastTs=ts;
+  if(G.levelStatus==="playing"){
+    G.spawnTimer+=dt;
+    if(G.spawnTimer>spawnInterval(currentLevel())){ G.spawnTimer=0; spawnCustomer(); }
+    G.customers.forEach(c=>{
+      if(c.state==="walking"){ c.x -= 0.05*dt*16; if(c.x<=c.targetX){ c.x=c.targetX; c.state="waiting"; } }
+      else if(c.state==="waiting"){ c.patience-=dt; if(c.patience<=0) c.state="leaving_sad"; }
+      else if(c.state==="leaving_sad"){ c.x -= 0.05*dt*16; }
+      else if(c.state==="leaving_happy"){ c.x -= 0.05*dt*16; }
+    });
+    G.customers = G.customers.filter(c=> c.x>-40);
+    // player movement
+    const p=G.player;
+    if(p.target){
+      const dx=p.target.x-p.x, dy=p.target.y-p.y, dist=Math.hypot(dx,dy);
+      const speed=0.13*dt*16;
+      if(dist<speed){
+        p.x=p.target.x; p.y=p.target.y;
+        if(p.action==="toShelf"){ p.carrying=true; p.action="idle"; p.target=null; }
+        else if(p.action==="toCustomer"){
+          const c=G.customers.find(x=>x.id===p.targetId);
+          if(c && c.state==="waiting"){
+            c.state="leaving_happy";
+            const gain=coinPerSale()+Math.floor(Math.random()*5);
+            shop.coins+=gain; shop.lifetime+=gain; G.served++; saveShop(); renderGamePanel(); updateHud();
+            spawnFloatText("+"+gain+" ₽", c.x, c.y-20);
+            if(G.served>=currentLevel().target){ clearLevel(); }
+          }
+          p.carrying=false; p.action="idle"; p.target=null; p.targetId=null;
+        }
+      } else { p.x+=dx/dist*speed; p.y+=dy/dist*speed; }
+    }
+  }
+  drawGame();
+  G.raf=requestAnimationFrame(gameLoop);
+}
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function drawGame(){
+  if(!G.ctx || !G.w) return;
+  const ctx=G.ctx, accent=cssVar("--accent")||"#0071E3", border=cssVar("--border")||"#ddd", surf2=cssVar("--surface-2")||"#fafafa", text=cssVar("--text")||"#111";
+  ctx.clearRect(0,0,G.w,G.h);
+  ctx.fillStyle=surf2; ctx.fillRect(0,0,G.w,G.h);
+  // shelves decoration row scaled by upgrade
+  const shelves = Math.min(8, 2+shop.shelf), slot=Math.min(30,(G.w-90)/shelves);
+  for(let i=0;i<shelves;i++){ const sx=70+i*slot; rr(ctx,sx,10,slot-6,14,3); ctx.fillStyle=border; ctx.fill(); ctx.fillStyle=accent; ctx.fillRect(sx+3,13,4,8); }
+  // shelf hotspot (pickup point)
+  ctx.fillStyle=text; ctx.globalAlpha=.06; ctx.beginPath(); ctx.arc(G.shelfPos.x,G.shelfPos.y,26,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+  rr(ctx,G.shelfPos.x-16,G.shelfPos.y-20,32,40,6); ctx.fillStyle=border; ctx.fill();
+  ctx.fillStyle=accent; rr(ctx,G.shelfPos.x-8,G.shelfPos.y-10,16,22,3); ctx.fill();
+  // player
+  const p=G.player, bob=Math.sin(performance.now()/260)*2;
+  ctx.fillStyle="#F1C27D"; ctx.beginPath(); ctx.arc(p.x,p.y-24+bob,8,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=accent; rr(ctx,p.x-9,p.y-17+bob,18,20,6); ctx.fill();
+  if(p.carrying){ ctx.fillStyle="#8e8ea1"; rr(ctx,p.x+6,p.y-14+bob,8,14,2); ctx.fill(); }
+  // customers
+  G.customers.forEach(c=>{
+    ctx.globalAlpha = c.state==="leaving_sad"?0.5:1;
+    ctx.fillStyle="#F1C27D"; ctx.beginPath(); ctx.arc(c.x,c.y-14,8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = c.state==="waiting" ? "#FF9F0A" : (c.state==="leaving_happy" ? "#34C759" : "#8E8E93");
+    rr(ctx,c.x-8,c.y-8,16,20,5); ctx.fill();
+    if(c.state==="waiting"){
+      ctx.strokeStyle="#FF9F0A"; ctx.lineWidth=2; ctx.beginPath();
+      const pct=Math.max(0,c.patience/patienceMs(currentLevel()));
+      ctx.arc(c.x,c.y-14,14,-Math.PI/2,-Math.PI/2+Math.PI*2*pct); ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  });
+}
+
+/* ---------- ADMIN PANEL ---------- */
+let adminTab="products";
+function isOwner(){ try{ return !!(tg && tg.initDataUnsafe && tg.initDataUnsafe.user && OWNER_TELEGRAM_ID && tg.initDataUnsafe.user.id===OWNER_TELEGRAM_ID); }catch(e){ return false; } }
+function updateAdminDot(){ const n=getRequests().filter(r=>r.status==="new").length; $("#adminDot").hidden = n===0; }
+$("#adminGearBtn").addEventListener("click", ()=>{
+  $("#adminOverlay").hidden=false;
+  if(isOwner() || sessionStorage.getItem(LS.unlocked)==="1"){ showAdminPanel(); } else { $("#adminLogin").hidden=false; $("#adminPanel").hidden=true; $("#addProductFab").hidden=true; }
+});
+$("#adminCancelBtn").addEventListener("click", ()=> $("#adminOverlay").hidden=true );
+$("#adminCloseBtn").addEventListener("click", ()=> $("#adminOverlay").hidden=true );
+$("#adminLoginForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  if($("#adminPassInput").value===ADMIN_PASSWORD){ try{ sessionStorage.setItem(LS.unlocked,"1"); }catch(err){} showAdminPanel(); }
+  else { showToast("Неверный пароль"); }
+});
+function showAdminPanel(){ $("#adminLogin").hidden=true; $("#adminPanel").hidden=false; switchAdminTab("products"); }
+$all("[data-atab]").forEach(b=> b.addEventListener("click", ()=> switchAdminTab(b.dataset.atab)));
+function switchAdminTab(name){
+  adminTab=name;
+  $all("[data-atab]").forEach(b=> b.classList.toggle("active", b.dataset.atab===name));
+  $("#adminProducts").hidden = name!=="products";
+  $("#adminRequests").hidden = name!=="requests";
+  $("#adminStats").hidden = name!=="stats";
+  $("#addProductFab").hidden = name!=="products";
+  if(name==="products") renderAdminProducts();
+  if(name==="requests") renderAdminRequests();
+  if(name==="stats") renderAdminStats();
+}
+function renderAdminProducts(){
+  const rows = allModels().map(m=>{
+    const lo=minPrice(m), hi=priceOf(m, m.storages.length-1, m.conditions.length-1);
+    return `<div class="adminRow">
+      <div class="thumbSm">${phoneSvg(m.colors[0].h)}</div>
+      <div class="ai"><b>${m.model}${m.isNew?" · новый":""}</b><span>${m.colors.length} цв. · ${m.storages.length} объём(ов) · ${fmt(lo)}${hi!==lo?"–"+fmt(hi):""}</span></div>
+      <div class="aBtns"><button data-editp="${m.id}">${ICON_EDIT}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
+    </div>`;
+  }).join("");
+  $("#adminProducts").innerHTML = rows + `<button class="btn btn-secondary" id="resetCatalogBtn" style="margin-top:10px;">Сбросить к демо-каталогу</button>`;
+  $("#resetCatalogBtn").onclick=()=> confirmDialog("Сбросить каталог к демонстрационным товарам? Ваши изменения будут потеряны.", ()=>{ try{ localStorage.removeItem(LS.products+"_used"); localStorage.removeItem(LS.products+"_new"); }catch(e){} usedModels=DEFAULT_USED.map(p=>({...p})); newModels=DEFAULT_NEW.map(p=>({...p})); renderAll(); renderAdminProducts(); showToast("Каталог сброшен"); });
+}
+document.addEventListener("click", e=>{
+  const ed=e.target.closest("[data-editp]"); if(ed) openProductEdit(ed.dataset.editp);
+  const del=e.target.closest("[data-delp]"); if(del) confirmDialog("Удалить эту модель из каталога?", ()=>{
+    const id=del.dataset.delp;
+    if(usedModels.find(x=>x.id===id)) saveUsed(usedModels.filter(x=>x.id!==id));
+    else saveNew(newModels.filter(x=>x.id!==id));
+    renderAdminProducts(); showToast("Товар удалён");
+  });
+});
+$("#addProductFab").addEventListener("click", ()=> openProductEdit(null));
+function fmtColorsForEdit(colors){ return colors.map(c=>c.n+"|"+c.h).join("\n"); }
+function fmtStoragesForEdit(storages){ return storages.map(s=>s.l+"|"+s.d).join("\n"); }
+function parseColors(text){ return text.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{ const [n,h]=l.split("|").map(x=>x&&x.trim()); return {n:n||"Цвет", h:/^#[0-9a-fA-F]{6}$/.test(h)?h:"#5a5a5f"}; }); }
+function parseStorages(text){ return text.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{ const [lab,d]=l.split("|").map(x=>x&&x.trim()); return {l:lab||"128 ГБ", d:Number(d)||0}; }); }
+function openProductEdit(id){
+  const existing = id ? findModel(id) : null;
+  const m = existing || {model:"",family:"",year:new Date().getFullYear(),isNew:false,basePrice:0,hit:false,desc:"",
+    colors:[{n:"Чёрный",h:"#2c2c2e"},{n:"Белый",h:"#f2f2ee"}], storages:[{l:"128 ГБ",d:0},{l:"256 ГБ",d:4000}]};
+  $("#productEditModal").innerHTML = `
+    <div class="modalHead"><h3>${id?"Изменить модель":"Новая модель"}</h3><button class="icon-btn" id="peCloseBtn">${ICON_CLOSE}</button></div>
+    <div class="fieldRow"><div class="field"><label>Модель</label><input id="peModel" value="${m.model}" placeholder="iPhone 16 Pro"/></div><div class="field"><label>Поколение (для фильтра)</label><input id="peFamily" value="${m.family}" placeholder="iPhone 16"/></div></div>
+    <div class="fieldRow"><div class="field"><label>Год</label><input id="peYear" type="number" value="${m.year}"/></div><div class="field"><label>Базовая цена, ₽</label><input id="peBase" type="number" value="${m.basePrice}"/></div></div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;"><input type="checkbox" id="peNew" ${m.isNew?"checked":""}/> Новое запечатанное устройство (без выбора состояния)</label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;"><input type="checkbox" id="peHit" ${m.hit?"checked":""}/> Отметить как «Хит»</label>
+    <div class="field"><label>Цвета (по одному в строке: Название|HEX)</label><textarea id="peColors" style="min-height:80px;">${fmtColorsForEdit(m.colors)}</textarea><div class="hint">Пример: Чёрный|#2c2c2e</div></div>
+    <div class="field"><label>Объёмы памяти (по одному в строке: Название|Наценка ₽)</label><textarea id="peStorages" style="min-height:70px;">${fmtStoragesForEdit(m.storages)}</textarea><div class="hint">Первая строка — самый дешёвый вариант, наценка 0</div></div>
+    <div class="field"><label>Описание</label><textarea id="peDesc">${m.desc||""}</textarea></div>
+    <button class="btn btn-primary" id="peSaveBtn">Сохранить</button>`;
+  $("#productEditModal").hidden=false; $("#editBackdrop").hidden=false;
+  $("#peCloseBtn").onclick=closeProductEdit;
+  $("#peSaveBtn").onclick=()=>{
+    const isNew = $("#peNew").checked;
+    const np = {
+      id: id || ("m"+Date.now()),
+      model:$("#peModel").value.trim()||"iPhone", family:$("#peFamily").value.trim()||$("#peModel").value.trim()||"iPhone",
+      year:Number($("#peYear").value)||new Date().getFullYear(), basePrice:Number($("#peBase").value)||0,
+      isNew, hit:$("#peHit").checked, desc:$("#peDesc").value.trim(),
+      colors: parseColors($("#peColors").value), storages: parseStorages($("#peStorages").value),
+      conditions: isNew?NEW_COND:USED_COND
+    };
+    if(np.colors.length===0) np.colors=[{n:"Чёрный",h:"#2c2c2e"}];
+    if(np.storages.length===0) np.storages=[{l:"128 ГБ",d:0}];
+    const wasNew = existing ? !!existing.isNew : null;
+    if(id){
+      if(wasNew===isNew){
+        if(isNew) saveNew(newModels.map(x=>x.id===id?np:x)); else saveUsed(usedModels.map(x=>x.id===id?np:x));
+      } else {
+        if(wasNew){ saveNew(newModels.filter(x=>x.id!==id)); saveUsed([np,...usedModels]); }
+        else { saveUsed(usedModels.filter(x=>x.id!==id)); saveNew([np,...newModels]); }
+      }
+    } else {
+      if(isNew) saveNew([np,...newModels]); else saveUsed([np,...usedModels]);
+    }
+    renderAdminProducts(); closeProductEdit(); showToast("Сохранено");
+  };
+}
+function closeProductEdit(){ $("#productEditModal").hidden=true; $("#editBackdrop").hidden=true; }
+$("#editBackdrop").addEventListener("click", closeProductEdit);
+
+function renderAdminRequests(){
+  const list=getRequests();
+  if(list.length===0){ $("#adminRequests").innerHTML='<p class="empty">Заявок пока нет.</p>'; return; }
+  $("#adminRequests").innerHTML = list.map(r=>`
+    <div class="adminRow" style="align-items:flex-start;">
+      <div class="ai">
+        <b>${r.type==="sell"?"Выкуп":"Покупка"} · ${r.title}${r.price?" · "+fmt(Number(r.price)):""}</b>
+        <span>${r.name?r.name+" · ":""}${r.phone||""}</span>
+        <span>${r.comment?r.comment+" · ":""}${new Date(r.date).toLocaleString("ru-RU")}</span>
+      </div>
+      <div class="aBtns" style="flex-direction:column;gap:6px;align-items:flex-end;">
+        <span class="statusPill ${r.status}" data-cyclestatus="${r.id}">${r.status==="new"?"Новая":r.status==="in_progress"?"В работе":"Закрыта"}</span>
+        <button data-delreq="${r.id}">${ICON_TRASH}</button>
+      </div>
+    </div>`).join("");
+}
+document.addEventListener("click", e=>{
+  const cs=e.target.closest("[data-cyclestatus]"); if(cs){ const order=["new","in_progress","done"]; const list=getRequests(); const idx=list.findIndex(r=>r.id===cs.dataset.cyclestatus); if(idx>-1){ const cur=order.indexOf(list[idx].status); list[idx].status=order[(cur+1)%order.length]; saveRequests(list); renderAdminRequests(); updateAdminDot(); } }
+  const dr=e.target.closest("[data-delreq]"); if(dr){ confirmDialog("Удалить эту заявку?", ()=>{ const list=getRequests().filter(r=>r.id!==dr.dataset.delreq); saveRequests(list); renderAdminRequests(); updateAdminDot(); }); }
+});
+function renderAdminStats(){
+  const reqs=getRequests(); const favsCount=getFavs().size;
+  const totalModels = allModels().length;
+  $("#adminStats").innerHTML = `<div class="statGrid">
+    <div class="statTile"><div class="num tabular">${totalModels}</div><div class="lbl">Моделей в каталоге</div></div>
+    <div class="statTile"><div class="num tabular">${reqs.length}</div><div class="lbl">Всего заявок</div></div>
+    <div class="statTile"><div class="num tabular">${reqs.filter(r=>r.status==="new").length}</div><div class="lbl">Новых заявок</div></div>
+    <div class="statTile"><div class="num tabular">${shop.lifetime}</div><div class="lbl">Заработано в игре, ₽</div></div>
+  </div>
+  <p class="muted small">Раздел «Избранное» на этом устройстве: ${favsCount}. Статистика считается локально в этом браузере — для сводной аналитики по всем пользователям потребуется серверная часть.</p>`;
+}
+
+/* ---------- RENDER ALL / INIT ---------- */
+function renderAll(){ renderFamilyChips(); renderCatalog(); if(state.view==="favorites") renderFavorites(); }
+function initTelegram(){
+  try{
+    if(tg){
+      tg.ready(); tg.expand();
+      if(tg.colorScheme) document.documentElement.dataset.theme = tg.colorScheme;
+      if(tg.onEvent) tg.onEvent("themeChanged", ()=>{ if(tg.colorScheme) document.documentElement.dataset.theme=tg.colorScheme; });
+    }
+  }catch(e){}
+}
+renderFamilyChips(); renderCatalog(); renderFaq(); updateAdminDot(); resetLevelUI();
+initTelegram();
+window.addEventListener("resize", ()=>{ if(!$("#gameView").hidden) setupCanvasIfNeeded(); });
+})();
+</script>
