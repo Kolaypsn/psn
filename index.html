@@ -1,16 +1,16 @@
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>PSN</title>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"><title>PSN</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F7F5F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A0A09" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@500;700;800&display=swap">
 <style>
 :root{
+  color-scheme:light;
   --bg:#F7F5F1; --surface:#FFFFFF; --surface-2:#F1ECE3; --text:#1A1814; --text-secondary:#7C7568;
   --border:#E2DCCF; --accent:#8A6A2E; --gold:#8A6A2E; --success:#3C8C55; --danger:#C4392E; --warning:#B4791E;
   --chip-bg:#EFE9DE; --chip-text:#4A4438; --overlay:rgba(20,16,8,.45); --fav-bg:rgba(255,255,255,.85);
+  --swatch-ring:rgba(20,16,8,.18);
   --radius-s:8px; --radius-m:14px; --radius-l:20px;
   --shadow:0 1px 2px rgba(20,16,8,.05),0 12px 30px rgba(20,16,8,.08);
   --font-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -19,16 +19,21 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
+    color-scheme:dark;
     --bg:#0A0A09; --surface:#18160F; --surface-2:#131210; --text:#F4EFE4; --text-secondary:#A29A88;
     --border:#332E23; --accent:#8F6E30; --gold:#D2AC5B; --success:#49B36A; --danger:#E0483B; --warning:#D6A23E;
     --chip-bg:#211E17; --chip-text:#D8D0BE; --overlay:rgba(0,0,0,.62); --fav-bg:rgba(24,22,15,.72);
+    --swatch-ring:rgba(244,239,228,.30);
     --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.5);
   }
 }
+:root[data-theme="light"]{ color-scheme:light; }
 :root[data-theme="dark"]{
+  color-scheme:dark;
   --bg:#0A0A09; --surface:#18160F; --surface-2:#131210; --text:#F4EFE4; --text-secondary:#A29A88;
   --border:#332E23; --accent:#8F6E30; --gold:#D2AC5B; --success:#49B36A; --danger:#E0483B; --warning:#D6A23E;
   --chip-bg:#211E17; --chip-text:#D8D0BE; --overlay:rgba(0,0,0,.62); --fav-bg:rgba(24,22,15,.72);
+  --swatch-ring:rgba(244,239,228,.30);
   --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;}
@@ -83,12 +88,29 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .badge.hit{color:var(--gold);border-color:var(--gold);}
 .badge.new{color:var(--text);border-color:var(--text);}
 .card .model{font-weight:700;font-size:13.5px;line-height:1.25;}
-.card .spec{font-size:11.5px;color:var(--text-secondary);}
+.card .spec{font-size:11.5px;color:var(--text-secondary);display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-height:11px;}
+.miniSwatches{display:flex;align-items:center;gap:3px;flex:none;}
+.miniSwatch{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px var(--swatch-ring);}
+.specSep{color:var(--text-secondary);}
 .card .priceRow{display:flex;align-items:baseline;gap:4px;margin-top:2px;}
 .card .price{font-family:var(--font-display);font-weight:800;font-size:15px;}
 .card .fromLbl{font-size:11px;color:var(--text-secondary);}
 
 .empty{text-align:center;color:var(--text-secondary);padding:40px 20px;font-size:14px;}
+
+.sectionTitle{font-size:15px;font-weight:700;margin:20px 0 10px;}
+.profileCard{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px;box-shadow:var(--shadow);}
+.profileAvatar{width:52px;height:52px;border-radius:50%;flex:none;background:var(--text);color:var(--gold);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-weight:600;font-size:20px;overflow:hidden;}
+.profileAvatar img{width:100%;height:100%;object-fit:cover;}
+.profileInfo{flex:1;min-width:0;}
+.profileInfo .pname{font-weight:700;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.profileInfo .pstats{display:flex;gap:12px;margin-top:4px;font-size:12px;color:var(--text-secondary);}
+.profileInfo .pstats b{color:var(--text);font-weight:700;}
+.myReqRow{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px;margin-bottom:8px;}
+.myReqRow .mrTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:4px;}
+.myReqRow .mrTitle{font-weight:700;font-size:13.5px;}
+.myReqRow .mrMeta{font-size:11.5px;color:var(--text-secondary);margin-top:2px;}
+.myReqRow .mrCancel{margin-top:8px;border:none;background:var(--chip-bg);color:var(--text);font-size:12px;font-weight:700;padding:7px 11px;border-radius:8px;}
 
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));}
 .tabbar .tabBtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-secondary);padding:6px 2px;border-radius:12px;cursor:pointer;}
@@ -167,10 +189,11 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .levelDot.current{background:var(--accent);color:#fff;}
 .levelDot.done svg{width:16px;height:16px;}
 .levelDot.locked{opacity:.45;}
-.gameStage{position:relative;border-radius:var(--radius-m);overflow:hidden;background:var(--surface-2);border:1px solid var(--border);touch-action:none;height:240px;}
+.gameStage{position:relative;border-radius:var(--radius-m);overflow:hidden;background:var(--surface-2);border:1px solid var(--border);touch-action:none;height:300px;}
 .gameStage canvas{width:100%;height:100%;display:block;}
 .gameHud{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;font-family:var(--font-display);font-weight:800;font-size:12.5px;pointer-events:none;}
 .gameHud span{background:rgba(0,0,0,.55);color:#fff;padding:4px 9px;border-radius:8px;}
+.gameHud #hudCombo:not(:empty){background:var(--gold);color:#1a1408;}
 .floatText{position:absolute;font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--success);pointer-events:none;transition:transform .6s ease-out,opacity .6s;}
 .gameMsg{text-align:center;font-size:13.5px;font-weight:700;margin:10px 0;min-height:18px;}
 .gameMsg.ok{color:var(--success);}
@@ -212,9 +235,7 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .statusPill.done{background:var(--success);color:#fff;}
 .fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;z-index:61;}
 .fab svg{width:22px;height:22px;}
-</style>
-</head>
-<body>
+</style></head><body>
 
 <div id="app">
   <header class="topbar">
@@ -222,7 +243,7 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
       <div class="brand-mark">P</div>
       <div style="min-width:0;">
         <div class="brand-name">PSN</div>
-        <span class="brand-sub">iPhone с рук и новые</span>
+        <span class="brand-sub">Техника с гарантией</span>
       </div>
     </div>
     <button class="icon-btn" id="searchToggle" aria-label="Поиск"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
@@ -251,19 +272,25 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
   </main>
 
   <main class="view" id="favoritesView" hidden>
-    <h2 class="viewTitle">Избранное</h2>
+    <h2 class="viewTitle">Личный кабинет</h2>
+    <div class="profileCard" id="profileCard"></div>
+    <h3 class="sectionTitle">Мои заявки</h3>
+    <div id="myRequests"></div>
+    <p class="empty" id="myReqEmpty" hidden>Заявок пока нет — оставьте её в каталоге или во вкладке «Продать».</p>
+    <h3 class="sectionTitle">Избранное</h3>
     <div class="grid" id="favGrid"></div>
     <p class="empty" id="favEmpty" hidden>Пока пусто. Нажимайте на сердечко у товара, чтобы сохранить его здесь.</p>
   </main>
 
   <main class="view" id="gameView" hidden>
     <h2 class="viewTitle">Мой магазин</h2>
-    <p class="muted small">Нажмите на стеллаж — продавец сходит за телефоном, затем нажмите на клиента — продавец отнесёт телефон ему. Пройдите уровень, пока не закончилось время: с каждым уровнем клиентов больше и они нетерпеливее.</p>
+    <p class="muted small">Коснитесь поля и потяните в сторону — продавец побежит туда джойстиком. Дойдите до витрины сверху, заберите телефон и отнесите его клиенту, пока не сжалось кольцо ожидания над его головой. Серии доставок без потерь клиентов дают комбо-бонус к монетам. Пройдите уровень, пока не закончилось время: дальше — больше клиентов и меньше терпения.</p>
     <div class="levelRow" id="levelRow"></div>
     <div class="gameStage" id="gameStage">
       <canvas id="gameCanvas"></canvas>
       <div class="gameHud">
         <span class="tabular" id="hudProgress">0/0</span>
+        <span class="tabular" id="hudCombo"></span>
         <span class="tabular" id="hudTimer">0с</span>
       </div>
     </div>
@@ -318,10 +345,10 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
   </main>
 
   <nav class="tabbar">
-    <button class="tabBtn active" data-tab="catalog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Каталог</span></button>
     <button class="tabBtn" data-tab="game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="12" rx="4"/><path d="M8 10v4M6 12h4"/><circle cx="16" cy="11" r=".8" fill="currentColor" stroke="none"/><circle cx="18" cy="13" r=".8" fill="currentColor" stroke="none"/></svg><span>Игра</span></button>
+    <button class="tabBtn active" data-tab="catalog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Каталог</span></button>
+    <button class="tabBtn" data-tab="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Кабинет</span></button>
     <button class="tabBtn" data-tab="sell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5.5c0-1.9-2.2-3-5-3s-5 1.3-5 3 2.2 2.6 5 3 5 1.1 5 3-2.2 3-5 3-5-1.1-5-3"/></svg><span>Продать</span></button>
-    <button class="tabBtn" data-tab="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg><span>Избранное</span></button>
     <button class="tabBtn" data-tab="contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg><span>Контакты</span></button>
   </nav>
 </div>
@@ -394,13 +421,42 @@ const ICON_PERCENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const ICON_TRUCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="13" height="10" rx="1"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>';
 const ICON_CABLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4M16 3v4"/><path d="M6 7h12v4a6 6 0 01-12 0V7z"/><path d="M12 17v4"/></svg>';
 
-function phoneSvg(hex){
-  const id = hex.replace('#','');
-  return `<svg viewBox="0 0 100 100"><defs><linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${hex}"/><stop offset="1" stop-color="${shade(hex,-18)}"/></linearGradient></defs>
-  <rect x="27" y="6" width="46" height="88" rx="12" fill="url(#g${id})"/>
-  <rect x="31" y="10" width="38" height="80" rx="8" fill="${shade(hex,28)}" opacity=".9"/>
-  <rect x="42" y="14" width="16" height="5" rx="2.5" fill="rgba(0,0,0,.25)"/>
-  <rect x="31" y="10" width="38" height="26" rx="8" fill="#fff" opacity=".14"/></svg>`;
+function phoneSvg(hex, m){
+  const id = hex.replace('#','')+(m?("_"+String(m.year||"")+(/Pro/i.test(m.model||"")?"p":"")):"");
+  const island = !m || m.year>=2023 || (m.year===2022 && /Pro/i.test(m.model||""));
+  const frameDark = shade(hex,-34), frameLight = shade(hex,26);
+  const notchW = island?28:40, notchH = island?6:8.5, notchY = island?12.5:10.5, notchRX = island?3:6;
+  const notchX = 50-notchW/2;
+  return `<svg viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${shade(hex,14)}"/>
+      <stop offset=".55" stop-color="${hex}"/>
+      <stop offset="1" stop-color="${frameDark}"/>
+    </linearGradient>
+    <radialGradient id="s${id}" cx="50%" cy="16%" r="85%">
+      <stop offset="0" stop-color="${hex}" stop-opacity=".38"/>
+      <stop offset=".55" stop-color="${hex}" stop-opacity=".09"/>
+      <stop offset="1" stop-color="#050505" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="h${id}" x1="0" y1="0" x2=".75" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".24"/>
+      <stop offset=".35" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="27" y="6" width="46" height="88" rx="13" fill="url(#g${id})"/>
+  <rect x="27.6" y="6.6" width="44.8" height="86.8" rx="12.4" fill="none" stroke="${frameLight}" stroke-width=".6" opacity=".5"/>
+  <rect x="24.4" y="26" width="1.7" height="8.5" rx="0.85" fill="${frameDark}"/>
+  <rect x="24.4" y="37.5" width="1.7" height="13.5" rx="0.85" fill="${frameDark}"/>
+  <rect x="73.9" y="29" width="1.7" height="15.5" rx="0.85" fill="${frameDark}"/>
+  <rect x="31" y="10" width="38" height="80" rx="8.5" fill="#0a0a0b"/>
+  <rect x="31" y="10" width="38" height="80" rx="8.5" fill="url(#s${id})"/>
+  <rect x="${notchX}" y="${notchY}" width="${notchW}" height="${notchH}" rx="${notchRX}" fill="#000"/>
+  ${island?`<circle cx="${notchX+notchW-6}" cy="${notchY+notchH/2}" r="1.25" fill="#1c2530"/><circle cx="${notchX+notchW-6}" cy="${notchY+notchH/2}" r=".5" fill="#3a4a5c"/>`
+         :`<circle cx="${notchX+7}" cy="${notchY+notchH/2}" r="1.15" fill="#1c2530"/><circle cx="${notchX+7}" cy="${notchY+notchH/2}" r=".45" fill="#3a4a5c"/>`}
+  <rect x="45" y="85.5" width="10" height="1.3" rx=".65" fill="#fff" opacity=".3"/>
+  <rect x="31" y="10" width="38" height="80" rx="8.5" fill="url(#h${id})"/>
+  </svg>`;
 }
 function shade(hex, pct){
   const n = parseInt(hex.slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
@@ -494,10 +550,10 @@ function cardHtml(m){
     <div class="thumb">
       <div class="badges">${m.isNew?'<span class="badge new">Новинка</span>':""}${m.hit?'<span class="badge hit">Хит</span>':""}</div>
       <button class="favBtn" data-fav="${m.id}">${favs.has(m.id)?ICON_HEART_F:ICON_HEART_O}</button>
-      ${phoneSvg(m.colors[0].h)}
+      ${phoneSvg(m.colors[0].h, m)}
     </div>
     <div class="model">${m.model}</div>
-    <div class="spec">${m.colors.length} цвет${m.colors.length===1?"":m.colors.length<5?"а":"ов"} · от ${m.storages[0].l}</div>
+    <div class="spec"><div class="miniSwatches">${m.colors.map(c=>`<span class="miniSwatch" style="background:${c.h}" title="${c.n}"></span>`).join("")}</div><span class="specSep">·</span><span>от ${m.storages[0].l}</span></div>
     <div class="priceRow"><span class="fromLbl">от</span><span class="price tabular">${fmt(minPrice(m))}</span></div>
   </div>`;
 }
@@ -515,9 +571,40 @@ function renderFavorites(){
   $("#favEmpty").hidden = list.length>0;
   $("#favGrid").hidden = list.length===0;
 }
+function renderProfileCard(){
+  const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+  const name = tgUser ? [tgUser.first_name,tgUser.last_name].filter(Boolean).join(" ").trim() : "Гость";
+  const initial = (name||"Г").trim().charAt(0).toUpperCase() || "Г";
+  const avatarInner = tgUser && tgUser.photo_url ? `<img src="${tgUser.photo_url}" alt="">` : initial;
+  const favCount = getFavs().size, reqCount = getRequests().length, earned = (typeof shop!=="undefined" && shop.lifetime) || 0;
+  $("#profileCard").innerHTML = `
+    <div class="profileAvatar">${avatarInner}</div>
+    <div class="profileInfo">
+      <div class="pname">${name}</div>
+      <div class="pstats"><span><b>${favCount}</b> в избранном</span><span><b>${reqCount}</b> заявок</span><span><b>${fmt(earned)}</b> в игре</span></div>
+    </div>`;
+}
+function renderMyRequests(){
+  const list = getRequests();
+  $("#myReqEmpty").hidden = list.length>0;
+  $("#myRequests").innerHTML = list.map(r=>`
+    <div class="myReqRow">
+      <div class="mrTop">
+        <div class="mrTitle">${r.type==="sell"?"Выкуп":"Покупка"} · ${r.title}${r.price?" · "+fmt(Number(r.price)):""}</div>
+        <span class="statusPill ${r.status}">${r.status==="new"?"Новая":r.status==="in_progress"?"В работе":"Закрыта"}</span>
+      </div>
+      <div class="mrMeta">${new Date(r.date).toLocaleString("ru-RU")}</div>
+      ${r.status==="new"?`<button class="mrCancel" data-cancelreq="${r.id}">Отменить заявку</button>`:""}
+    </div>`).join("");
+}
+function renderCabinet(){ renderProfileCard(); renderMyRequests(); renderFavorites(); }
+document.addEventListener("click", e=>{
+  const cr=e.target.closest("[data-cancelreq]");
+  if(cr){ confirmDialog("Отменить эту заявку?", ()=>{ const list=getRequests().filter(r=>r.id!==cr.dataset.cancelreq); saveRequests(list); renderMyRequests(); renderProfileCard(); updateAdminDot(); showToast("Заявка отменена"); }); }
+});
 document.addEventListener("click", e=>{
   const fav=e.target.closest("[data-fav]");
-  if(fav){ e.stopPropagation(); const id=fav.dataset.fav; const favs=getFavs(); favs.has(id)?favs.delete(id):favs.add(id); saveFavs(favs); haptic("light"); renderCatalog(); renderFavorites(); return; }
+  if(fav){ e.stopPropagation(); const id=fav.dataset.fav; const favs=getFavs(); favs.has(id)?favs.delete(id):favs.add(id); saveFavs(favs); haptic("light"); renderCatalog(); renderFavorites(); renderProfileCard(); return; }
   const open=e.target.closest("[data-open]"); if(open){ openPicker(open.dataset.open); }
 });
 $("#sortSelect").addEventListener("change", e=>{ state.sort=e.target.value; renderCatalog(); });
@@ -539,7 +626,7 @@ function renderPicker(){
   const cond = m.conditions[pick.condIdx];
   $("#detailSheet").innerHTML = `
     <div class="grabber"></div>
-    <div class="detailImg">${phoneSvg(m.colors[pick.colorIdx].h)}</div>
+    <div class="detailImg">${phoneSvg(m.colors[pick.colorIdx].h, m)}</div>
     <div class="detailTitle">${m.model}</div>
     <div class="detailSub muted small">${m.colors[pick.colorIdx].n} · ${m.storages[pick.storageIdx].l}</div>
     <div class="pickBlock"><label>Цвет</label><div class="swatches" id="pkColors"></div></div>
@@ -560,7 +647,7 @@ function renderPicker(){
   $("#pkColors").innerHTML = m.colors.map((c,i)=>`<button class="swatch ${i===pick.colorIdx?"sel":""}" data-pk="color" data-i="${i}" style="background:${c.h};" title="${c.n}"></button>`).join("");
   $("#pkStorages").innerHTML = m.storages.map((s,i)=>`<button class="pickChip ${i===pick.storageIdx?"sel":""}" data-pk="storage" data-i="${i}">${s.l}</button>`).join("");
   if(m.conditions.length>1) $("#pkConds").innerHTML = m.conditions.map((c,i)=>`<button class="pickChip ${i===pick.condIdx?"sel":""}" data-pk="cond" data-i="${i}">${c.l}</button>`).join("");
-  $("#detailFavBtn").onclick=()=>{ const favs=getFavs(); favs.has(m.id)?favs.delete(m.id):favs.add(m.id); saveFavs(favs); renderPicker(); renderCatalog(); renderFavorites(); };
+  $("#detailFavBtn").onclick=()=>{ const favs=getFavs(); favs.has(m.id)?favs.delete(m.id):favs.add(m.id); saveFavs(favs); renderPicker(); renderCatalog(); renderFavorites(); renderProfileCard(); };
   $("#detailBuyBtn").onclick=()=>openRequestModal(m, pick);
 }
 document.addEventListener("click", e=>{
@@ -639,7 +726,7 @@ function switchTab(name){
   state.view=name;
   ["catalog","favorites","game","sell","contacts"].forEach(v=>{ $("#"+v+"View").hidden = v!==name; });
   $all(".tabBtn").forEach(b=> b.classList.toggle("active", b.dataset.tab===name));
-  if(name==="favorites") renderFavorites();
+  if(name==="favorites") renderCabinet();
   if(name==="game") { renderGamePanel(); renderLevelRow(); setupCanvasIfNeeded(); }
   if(name==="sell") renderSellView();
   window.scrollTo(0,0);
@@ -655,35 +742,38 @@ function confirmDialog(text, onYes, danger){
 }
 $("#confirmBackdrop").addEventListener("click", ()=>{ $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; });
 
-/* ================= SHOP-TYCOON GAME WITH LEVELS ================= */
+/* ================= PHONE-SHOP RUNNER GAME WITH LEVELS ================= */
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function defaultShop(){ return { coins:0, lifetime:0, helper:0, shelf:0, ad:0, claimed:[], unlockedLevel:1, levelIdx:0 }; }
 let shop = safeGet(LS.shop, null) || defaultShop();
 function saveShop(){ safeSet(LS.shop, shop); }
 
+const CUSTOMER_COLORS = ["#7b6fa6","#b1454f","#8a6a4e","#4f7d6c","#5c7ea6","#b58a4a"];
 const LEVELS = [
- {target:5, time:40, spawnInterval:2200, patience:4500, lanes:1},
- {target:7, time:40, spawnInterval:1900, patience:4200, lanes:1},
- {target:9, time:45, spawnInterval:1650, patience:3900, lanes:2},
- {target:11, time:45, spawnInterval:1400, patience:3600, lanes:2},
- {target:13, time:50, spawnInterval:1200, patience:3300, lanes:2},
- {target:16, time:55, spawnInterval:1000, patience:3000, lanes:2}
+ {target:8,  time:45, maxCustomers:2, spawnInterval:2200, patience:6000},
+ {target:10, time:45, maxCustomers:3, spawnInterval:2000, patience:5600},
+ {target:12, time:50, maxCustomers:3, spawnInterval:1750, patience:5200},
+ {target:14, time:50, maxCustomers:4, spawnInterval:1550, patience:4800},
+ {target:16, time:55, maxCustomers:4, spawnInterval:1350, patience:4400},
+ {target:20, time:60, maxCustomers:5, spawnInterval:1150, patience:4000}
 ];
+/* Пороги наград — в «жизненных» (накопленных, не потраченных) монетах. Ориентир калибровки:
+   рядовой вовлечённый раунд ~150 монет/мин активной игры, так что ~5000 ≈ полчаса игры, ~10000 ≈ час. */
 const ACHIEVEMENTS = [
  {code:"SAVE5", label:"−5% на покупку", desc:"Заработайте 300 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=300},
- {code:"FREESHIP", label:"Бесплатная доставка", desc:"Пройдите 3-й уровень магазина", icon:ICON_TRUCK, need:s=>s.unlockedLevel>=4},
  {code:"SAVE10", label:"−10% на покупку", desc:"Заработайте 1200 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=1200},
  {code:"SAVE15", label:"−15% на покупку", desc:"Заработайте 3000 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=3000},
- {code:"FREECABLE", label:"Кабель в подарок", desc:"Пройдите все уровни магазина", icon:ICON_CABLE, need:s=>s.unlockedLevel>LEVELS.length}
+ {code:"FREESHIP", label:"Бесплатная доставка", desc:"Заработайте 5000 ₽ в игре — это примерно полчаса активной игры", icon:ICON_TRUCK, need:s=>s.lifetime>=5000},
+ {code:"FREECABLE", label:"Кабель в подарок", desc:"Заработайте 10000 ₽ в игре — это примерно час активной игры", icon:ICON_CABLE, need:s=>s.lifetime>=10000}
 ];
 function upgradeCost(base, level){ return Math.round(base*Math.pow(1.55, level)); }
-function spawnInterval(lv){ return Math.max(500, lv.spawnInterval * (1 - shop.helper*0.09)); }
+function playerSpeed(){ return 150 * (1 + shop.helper*0.15); }
 function patienceMs(lv){ return lv.patience * (1 + shop.ad*0.16); }
-function coinPerSale(){ return 8 + shop.shelf*4; }
+function coinPerSale(){ return 10 + shop.shelf*5; }
 
 function renderGamePanel(){
   const hc = upgradeCost(80, shop.helper), sc = upgradeCost(120, shop.shelf), ac = upgradeCost(100, shop.ad);
-  $("#helperInfo").textContent = "Ур. "+shop.helper+" · клиенты приходят чаще";
+  $("#helperInfo").textContent = "Ур. "+shop.helper+" · продавец быстрее бегает по залу";
   $("#shelfInfo").textContent = "Ур. "+shop.shelf+" · +доход с продажи";
   $("#adInfo").textContent = "Ур. "+shop.ad+" · дольше ждут очереди";
   $("#buyHelper").textContent = hc+" ₽"; $("#buyHelper").disabled = shop.coins<hc;
@@ -729,13 +819,15 @@ document.addEventListener("click", e=>{
   shop.levelIdx=i; saveShop(); renderLevelRow(); resetLevelUI();
 });
 
-const G = { ctx:null, w:0, h:0, raf:null, lastTs:0, customers:[], spawnTimer:0, levelStatus:"idle", served:0, timeLeft:0, timerInt:null,
-  player:{x:60,y:0,carrying:false,action:"idle",target:null,targetId:null}, shelfPos:{x:34,y:0} };
+const G = { ctx:null, w:0, h:0, raf:null, lastTs:0, levelStatus:"idle", served:0, timeLeft:0, timerInt:null,
+  combo:0, misses:0,
+  player:{x:0,y:0,r:13,carrying:false},
+  customers:[], spawnTimer:0,
+  joystick:{active:false,id:null,baseX:0,baseY:0,curX:0,curY:0} };
+const JOY_MAX = 38;
 
-function laneY(){ return G.h - 70; }
-function shelfY(){ return 56; }
-function laneSlot(i){ return laneY() + i*38 - (currentLevel().lanes>1?19:0); }
 function currentLevel(){ return LEVELS[shop.levelIdx]; }
+function shelfRect(){ return {x:0,y:0,w:G.w,h:52}; }
 
 function setupCanvasIfNeeded(){
   const stage=$("#gameStage"), canvas=$("#gameCanvas");
@@ -745,13 +837,33 @@ function setupCanvasIfNeeded(){
   canvas.style.width=rect.width+"px"; canvas.style.height=rect.height+"px";
   G.ctx=canvas.getContext("2d"); G.ctx.setTransform(dpr,0,0,dpr,0,0);
   G.w=rect.width; G.h=rect.height;
-  G.player.y = laneY(); G.shelfPos.y = shelfY()+30;
+  G.player.x=G.w/2; G.player.y=Math.min(G.h-30, shelfRect().h+70);
   if(!G.raf){ G.lastTs=performance.now(); G.raf=requestAnimationFrame(gameLoop); }
-  canvas.onpointerdown = handlePointer;
+  canvas.onpointerdown = startJoystick;
+  canvas.onpointermove = moveJoystick;
+  canvas.onpointerup = endJoystick;
+  canvas.onpointercancel = endJoystick;
   drawGame();
 }
+function startJoystick(ev){
+  if(G.levelStatus!=="playing") return;
+  const rect=ev.target.getBoundingClientRect();
+  const x=ev.clientX-rect.left, y=ev.clientY-rect.top;
+  G.joystick.active=true; G.joystick.id=ev.pointerId; G.joystick.baseX=x; G.joystick.baseY=y; G.joystick.curX=x; G.joystick.curY=y;
+  try{ ev.target.setPointerCapture(ev.pointerId); }catch(e){}
+}
+function moveJoystick(ev){
+  if(!G.joystick.active || ev.pointerId!==G.joystick.id) return;
+  const rect=ev.target.getBoundingClientRect();
+  G.joystick.curX=ev.clientX-rect.left; G.joystick.curY=ev.clientY-rect.top;
+}
+function endJoystick(ev){
+  if(G.joystick.id!==ev.pointerId) return;
+  G.joystick.active=false; G.joystick.id=null;
+}
 function resetLevelUI(){
-  G.levelStatus="idle"; G.customers=[]; G.served=0; G.timeLeft=currentLevel().time; G.player={x:60,y:laneY(),carrying:false,action:"idle",target:null,targetId:null};
+  G.levelStatus="idle"; G.customers=[]; G.served=0; G.timeLeft=currentLevel().time; G.combo=0; G.misses=0; G.spawnTimer=0;
+  G.player.carrying=false; G.player.x=(G.w||0)/2; G.player.y=shelfRect().h+70;
   clearInterval(G.timerInt);
   $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent="Начать уровень "+(shop.levelIdx+1);
   $("#gameMsg").textContent=""; $("#gameMsg").className="gameMsg";
@@ -760,6 +872,7 @@ function resetLevelUI(){
 function updateHud(){
   $("#hudProgress").textContent = G.served+"/"+currentLevel().target;
   $("#hudTimer").textContent = Math.max(0,Math.ceil(G.timeLeft))+"с";
+  const comboEl=$("#hudCombo"); if(comboEl) comboEl.textContent = G.combo>1 ? "×"+G.combo : "";
 }
 $("#gameActionBtn").addEventListener("click", ()=>{
   if(G.levelStatus==="cleared"){
@@ -772,8 +885,8 @@ $("#gameActionBtn").addEventListener("click", ()=>{
   startLevel();
 });
 function startLevel(){
-  G.levelStatus="playing"; G.customers=[]; G.served=0; G.spawnTimer=0; G.timeLeft=currentLevel().time;
-  G.player={x:60,y:laneY(),carrying:false,action:"idle",target:null,targetId:null};
+  G.levelStatus="playing"; G.customers=[]; G.served=0; G.spawnTimer=0; G.timeLeft=currentLevel().time; G.combo=0; G.misses=0;
+  G.player.carrying=false; G.player.x=G.w/2; G.player.y=shelfRect().h+70;
   $("#gameActionBtn").hidden=true; $("#gameMsg").textContent=""; $("#gameMsg").className="gameMsg";
   updateHud();
   clearInterval(G.timerInt);
@@ -789,7 +902,7 @@ function clearLevel(){
   shop.coins+=bonus; shop.lifetime+=bonus; saveShop(); renderGamePanel();
   const n=shop.levelIdx+1;
   if(shop.unlockedLevel<n+1){ shop.unlockedLevel=n+1; saveShop(); renderLevelRow(); }
-  $("#gameMsg").textContent="Уровень пройден! Бонус +"+bonus+" ₽"; $("#gameMsg").className="gameMsg ok";
+  $("#gameMsg").textContent="Уровень пройден! Бонус +"+bonus+" ₽"+(G.misses===0?" · ни один клиент не ушёл!":""); $("#gameMsg").className="gameMsg ok";
   $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent = (shop.levelIdx+1<LEVELS.length)?"Следующий уровень":"Начать заново";
   haptic("success"); updateHud();
 }
@@ -801,25 +914,47 @@ function failLevel(){
 }
 function spawnCustomer(){
   const lv=currentLevel();
-  if(G.customers.length >= lv.lanes) return;
-  const usedLanes = G.customers.map(c=>c.lane);
-  let lane=0; for(let i=0;i<lv.lanes;i++){ if(!usedLanes.includes(i)){ lane=i; break; } }
-  G.customers.push({id:"c"+Date.now()+Math.random(), x:G.w+20, y:laneSlot(lane), lane, state:"walking", patience:patienceMs(lv), targetX: G.w-70 - lane*4});
+  const waiting = G.customers.filter(c=>c.state==="waiting").length;
+  if(waiting >= lv.maxCustomers) return;
+  const shelf=shelfRect();
+  let x,y,ok,tries=0;
+  do{
+    x = 26 + Math.random()*(G.w-52);
+    y = shelf.h+38 + Math.random()*(G.h-shelf.h-70);
+    ok = G.customers.every(c=> c.state!=="waiting" || Math.hypot(c.x-x,c.y-y)>46);
+    tries++;
+  } while(!ok && tries<16);
+  const p=patienceMs(lv);
+  G.customers.push({id:"c"+Date.now()+Math.random(), x, y, r:13, color:CUSTOMER_COLORS[Math.floor(Math.random()*CUSTOMER_COLORS.length)], patience:p, maxPatience:p, state:"waiting", leftAt:0});
 }
-function handlePointer(ev){
-  if(G.levelStatus!=="playing") return;
-  const rect=ev.target.getBoundingClientRect();
-  const x=ev.clientX-rect.left, y=ev.clientY-rect.top;
-  if(G.player.action!=="idle") return;
-  const dShelf = Math.hypot(x-G.shelfPos.x, y-G.shelfPos.y);
-  if(dShelf<30){
-    if(G.player.carrying){ showToast("Вы уже несёте телефон клиенту"); return; }
-    G.player.action="toShelf"; G.player.target={x:G.shelfPos.x+16,y:G.shelfPos.y+6}; return;
+function updatePlayer(dt){
+  const speed=playerSpeed();
+  let vx=0, vy=0;
+  if(G.joystick.active){
+    const dx=G.joystick.curX-G.joystick.baseX, dy=G.joystick.curY-G.joystick.baseY;
+    const dist=Math.hypot(dx,dy);
+    if(dist>3){
+      const clamped=Math.min(dist,JOY_MAX), factor=clamped/JOY_MAX;
+      vx=(dx/dist)*speed*factor; vy=(dy/dist)*speed*factor;
+    }
   }
-  for(const c of G.customers){
-    if(c.state==="waiting" && Math.hypot(x-c.x,y-c.y)<28){
-      if(!G.player.carrying){ showToast("Сначала возьмите телефон со стеллажа"); return; }
-      G.player.action="toCustomer"; G.player.target={x:c.x-14,y:c.y}; G.player.targetId=c.id; return;
+  const p=G.player;
+  p.x = Math.max(p.r, Math.min(G.w-p.r, p.x+vx*dt/1000));
+  p.y = Math.max(shelfRect().h-6, Math.min(G.h-p.r-4, p.y+vy*dt/1000));
+
+  if(!p.carrying && p.y <= shelfRect().h+p.r+6){
+    p.carrying=true; haptic("light");
+  }
+  if(p.carrying){
+    const idx=G.customers.findIndex(c=>c.state==="waiting" && Math.hypot(c.x-p.x,c.y-p.y) < c.r+p.r+4);
+    if(idx>-1){
+      const c=G.customers[idx]; c.state="served"; c.leftAt=performance.now();
+      p.carrying=false; G.combo++; G.served++;
+      const gain=coinPerSale()+Math.floor(Math.random()*5)+Math.min(10,G.combo);
+      shop.coins+=gain; shop.lifetime+=gain; saveShop(); renderGamePanel(); updateHud();
+      spawnFloatText("+"+gain+" ₽", c.x, c.y-16);
+      haptic("light");
+      if(G.served>=currentLevel().target){ clearLevel(); }
     }
   }
 }
@@ -834,70 +969,75 @@ function gameLoop(ts){
   const dt=Math.min(60, ts-G.lastTs); G.lastTs=ts;
   if(G.levelStatus==="playing"){
     G.spawnTimer+=dt;
-    if(G.spawnTimer>spawnInterval(currentLevel())){ G.spawnTimer=0; spawnCustomer(); }
+    if(G.spawnTimer>currentLevel().spawnInterval){ G.spawnTimer=0; spawnCustomer(); }
     G.customers.forEach(c=>{
-      if(c.state==="walking"){ c.x -= 0.05*dt*16; if(c.x<=c.targetX){ c.x=c.targetX; c.state="waiting"; } }
-      else if(c.state==="waiting"){ c.patience-=dt; if(c.patience<=0) c.state="leaving_sad"; }
-      else if(c.state==="leaving_sad"){ c.x -= 0.05*dt*16; }
-      else if(c.state==="leaving_happy"){ c.x -= 0.05*dt*16; }
+      if(c.state==="waiting"){
+        c.patience-=dt;
+        if(c.patience<=0){ c.state="left"; c.leftAt=performance.now(); G.combo=0; G.misses++; updateHud(); }
+      }
     });
-    G.customers = G.customers.filter(c=> c.x>-40);
-    // player movement
-    const p=G.player;
-    if(p.target){
-      const dx=p.target.x-p.x, dy=p.target.y-p.y, dist=Math.hypot(dx,dy);
-      const speed=0.13*dt*16;
-      if(dist<speed){
-        p.x=p.target.x; p.y=p.target.y;
-        if(p.action==="toShelf"){ p.carrying=true; p.action="idle"; p.target=null; }
-        else if(p.action==="toCustomer"){
-          const c=G.customers.find(x=>x.id===p.targetId);
-          if(c && c.state==="waiting"){
-            c.state="leaving_happy";
-            const gain=coinPerSale()+Math.floor(Math.random()*5);
-            shop.coins+=gain; shop.lifetime+=gain; G.served++; saveShop(); renderGamePanel(); updateHud();
-            spawnFloatText("+"+gain+" ₽", c.x, c.y-20);
-            if(G.served>=currentLevel().target){ clearLevel(); }
-          }
-          p.carrying=false; p.action="idle"; p.target=null; p.targetId=null;
-        }
-      } else { p.x+=dx/dist*speed; p.y+=dy/dist*speed; }
-    }
+    G.customers = G.customers.filter(c=> c.state==="waiting" || performance.now()-c.leftAt<300);
+    updatePlayer(dt);
   }
   drawGame();
   G.raf=requestAnimationFrame(gameLoop);
 }
-function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 function drawGame(){
   if(!G.ctx || !G.w) return;
-  const ctx=G.ctx, accent=cssVar("--accent")||"#0071E3", border=cssVar("--border")||"#ddd", surf2=cssVar("--surface-2")||"#fafafa", text=cssVar("--text")||"#111";
+  const ctx=G.ctx, accent=cssVar("--accent")||"#0071E3", border=cssVar("--border")||"#ddd", surf2=cssVar("--surface-2")||"#fafafa",
+        surf=cssVar("--surface")||"#fff", text=cssVar("--text")||"#111", danger=cssVar("--danger")||"#e33", success=cssVar("--success")||"#3c8c55";
   ctx.clearRect(0,0,G.w,G.h);
   ctx.fillStyle=surf2; ctx.fillRect(0,0,G.w,G.h);
-  // shelves decoration row scaled by upgrade
-  const shelves = Math.min(8, 2+shop.shelf), slot=Math.min(30,(G.w-90)/shelves);
-  for(let i=0;i<shelves;i++){ const sx=70+i*slot; rr(ctx,sx,10,slot-6,14,3); ctx.fillStyle=border; ctx.fill(); ctx.fillStyle=accent; ctx.fillRect(sx+3,13,4,8); }
-  // shelf hotspot (pickup point)
-  ctx.fillStyle=text; ctx.globalAlpha=.06; ctx.beginPath(); ctx.arc(G.shelfPos.x,G.shelfPos.y,26,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
-  rr(ctx,G.shelfPos.x-16,G.shelfPos.y-20,32,40,6); ctx.fillStyle=border; ctx.fill();
-  ctx.fillStyle=accent; rr(ctx,G.shelfPos.x-8,G.shelfPos.y-10,16,22,3); ctx.fill();
-  // player
-  const p=G.player, bob=Math.sin(performance.now()/260)*2;
-  ctx.fillStyle="#F1C27D"; ctx.beginPath(); ctx.arc(p.x,p.y-24+bob,8,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle=accent; rr(ctx,p.x-9,p.y-17+bob,18,20,6); ctx.fill();
-  if(p.carrying){ ctx.fillStyle="#8e8ea1"; rr(ctx,p.x+6,p.y-14+bob,8,14,2); ctx.fill(); }
-  // customers
+
+  const shelf=shelfRect();
+  ctx.strokeStyle=border; ctx.globalAlpha=.35; ctx.lineWidth=1;
+  for(let x=0;x<G.w;x+=30){ ctx.beginPath(); ctx.moveTo(x+.5,shelf.h); ctx.lineTo(x+.5,G.h); ctx.stroke(); }
+  for(let y=shelf.h;y<G.h;y+=30){ ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(G.w,y+.5); ctx.stroke(); }
+  ctx.globalAlpha=1;
+
+  ctx.fillStyle=accent; ctx.globalAlpha=.16; ctx.fillRect(0,0,G.w,shelf.h); ctx.globalAlpha=1;
+  ctx.strokeStyle=accent; ctx.globalAlpha=.4; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(0,shelf.h); ctx.lineTo(G.w,shelf.h); ctx.stroke(); ctx.globalAlpha=1;
+  ctx.fillStyle=text; ctx.font="600 11px sans-serif"; ctx.textAlign="center"; ctx.globalAlpha=.55;
+  ctx.fillText("ВИТРИНА — заберите телефон", G.w/2, shelf.h/2+4); ctx.globalAlpha=1;
+
   G.customers.forEach(c=>{
-    ctx.globalAlpha = c.state==="leaving_sad"?0.5:1;
-    ctx.fillStyle="#F1C27D"; ctx.beginPath(); ctx.arc(c.x,c.y-14,8,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = c.state==="waiting" ? "#FF9F0A" : (c.state==="leaving_happy" ? "#34C759" : "#8E8E93");
-    rr(ctx,c.x-8,c.y-8,16,20,5); ctx.fill();
+    let alpha=1; if(c.state!=="waiting" && c.leftAt){ alpha=Math.max(0,1-(performance.now()-c.leftAt)/300); }
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle=c.color; ctx.beginPath(); ctx.arc(c.x,c.y,c.r,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth=1; ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.stroke();
     if(c.state==="waiting"){
-      ctx.strokeStyle="#FF9F0A"; ctx.lineWidth=2; ctx.beginPath();
-      const pct=Math.max(0,c.patience/patienceMs(currentLevel()));
-      ctx.arc(c.x,c.y-14,14,-Math.PI/2,-Math.PI/2+Math.PI*2*pct); ctx.stroke();
+      const pct=Math.max(0,c.patience/c.maxPatience);
+      ctx.strokeStyle = pct<0.3 ? danger : accent; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.arc(c.x,c.y,c.r+6,-Math.PI/2,-Math.PI/2+Math.PI*2*pct); ctx.stroke();
+      ctx.font="11px sans-serif"; ctx.textAlign="center"; ctx.globalAlpha=alpha*.9;
+      ctx.fillText("📱", c.x, c.y-c.r-11);
+      ctx.globalAlpha=alpha;
+    } else {
+      ctx.fillStyle = c.state==="served" ? success : danger;
+      ctx.font="bold 14px sans-serif"; ctx.textAlign="center";
+      ctx.fillText(c.state==="served"?"✓":"✕", c.x, c.y+4);
     }
     ctx.globalAlpha=1;
   });
+
+  const p=G.player;
+  ctx.fillStyle=text; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+  ctx.lineWidth=1.5; ctx.strokeStyle=surf; ctx.stroke();
+  if(p.carrying){
+    ctx.font="11px sans-serif"; ctx.textAlign="center";
+    ctx.fillText("📱", p.x, p.y-p.r-8);
+  }
+
+  if(G.joystick.active){
+    ctx.globalAlpha=.28; ctx.fillStyle=text;
+    ctx.beginPath(); ctx.arc(G.joystick.baseX,G.joystick.baseY,JOY_MAX,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=.5;
+    const dx=G.joystick.curX-G.joystick.baseX, dy=G.joystick.curY-G.joystick.baseY, dist=Math.hypot(dx,dy);
+    const kx = dist>JOY_MAX ? G.joystick.baseX+(dx/dist)*JOY_MAX : G.joystick.curX;
+    const ky = dist>JOY_MAX ? G.joystick.baseY+(dy/dist)*JOY_MAX : G.joystick.curY;
+    ctx.beginPath(); ctx.arc(kx,ky,16,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+  }
 }
 
 /* ---------- ADMIN PANEL ---------- */
@@ -932,7 +1072,7 @@ function renderAdminProducts(){
   const rows = allModels().map(m=>{
     const lo=minPrice(m), hi=priceOf(m, m.storages.length-1, m.conditions.length-1);
     return `<div class="adminRow">
-      <div class="thumbSm">${phoneSvg(m.colors[0].h)}</div>
+      <div class="thumbSm">${phoneSvg(m.colors[0].h, m)}</div>
       <div class="ai"><b>${m.model}${m.isNew?" · новый":""}</b><span>${m.colors.length} цв. · ${m.storages.length} объём(ов) · ${fmt(lo)}${hi!==lo?"–"+fmt(hi):""}</span></div>
       <div class="aBtns"><button data-editp="${m.id}">${ICON_EDIT}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
     </div>`;
@@ -1032,13 +1172,22 @@ function renderAdminStats(){
 }
 
 /* ---------- RENDER ALL / INIT ---------- */
-function renderAll(){ renderFamilyChips(); renderCatalog(); if(state.view==="favorites") renderFavorites(); }
+function renderAll(){ renderFamilyChips(); renderCatalog(); if(state.view==="favorites") renderCabinet(); }
+function syncChromeColor(){
+  try{
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if(!bg) return;
+    $all('meta[name="theme-color"]').forEach(m=>m.setAttribute('content', bg));
+    if(tg){ try{ if(tg.setHeaderColor) tg.setHeaderColor(bg); }catch(e){} try{ if(tg.setBackgroundColor) tg.setBackgroundColor(bg); }catch(e){} }
+  }catch(e){}
+}
 function initTelegram(){
   try{
     if(tg){
       tg.ready(); tg.expand();
       if(tg.colorScheme) document.documentElement.dataset.theme = tg.colorScheme;
-      if(tg.onEvent) tg.onEvent("themeChanged", ()=>{ if(tg.colorScheme) document.documentElement.dataset.theme=tg.colorScheme; });
+      syncChromeColor();
+      if(tg.onEvent) tg.onEvent("themeChanged", ()=>{ if(tg.colorScheme) document.documentElement.dataset.theme=tg.colorScheme; syncChromeColor(); });
     }
   }catch(e){}
 }
@@ -1047,6 +1196,4 @@ initTelegram();
 window.addEventListener("resize", ()=>{ if(!$("#gameView").hidden) setupCanvasIfNeeded(); });
 })();
 </script>
-
-</body>
-</html>
+</body></html>
