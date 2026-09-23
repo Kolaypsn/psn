@@ -78,6 +78,17 @@ button{font-family:inherit;}
 .toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 0 12px;}
 select{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-s);padding:7px 10px;font-size:13px;}
 
+.reviewsBlock{margin:6px 0 14px;cursor:pointer;}
+.reviewsHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.reviewsHead h3{font-size:15px;font-weight:700;margin:0;}
+.reviewsAllLink{font-size:12.5px;font-weight:700;color:var(--accent);background:none;border:none;display:flex;align-items:center;gap:3px;}
+.reviewsScroll{display:flex;gap:10px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+.reviewCard{flex:none;width:220px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;}
+.reviewCard .rPhoto{width:100%;height:110px;border-radius:var(--radius-s);object-fit:cover;background:var(--surface-2);}
+.reviewCard .rStars{color:var(--gold);font-size:12px;letter-spacing:1px;}
+.reviewCard .rText{font-size:12.5px;line-height:1.45;color:var(--text);display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;}
+.reviewCard .rAuthor{font-size:11.5px;color:var(--text-secondary);font-weight:600;}
+
 .view{padding-top:2px;}
 .viewTitle{font-size:22px;font-weight:800;padding:14px 0 4px;}
 
@@ -271,6 +282,13 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
       <button data-seg="new">Новые (запечатан)</button>
     </div>
     <div class="chipsRow" id="familyChips"></div>
+    <div class="reviewsBlock" id="reviewsBlock" hidden>
+      <div class="reviewsHead">
+        <h3>Отзывы покупателей</h3>
+        <button class="reviewsAllLink" id="reviewsAllBtn">Все отзывы →</button>
+      </div>
+      <div class="reviewsScroll" id="reviewsScroll"></div>
+    </div>
     <div class="toolbar">
       <span class="muted small tabular" id="resultCount"></span>
       <select id="sortSelect">
@@ -397,10 +415,12 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
     <div class="adminTabs">
       <button data-atab="products" class="active">Товары</button>
       <button data-atab="requests">Заявки</button>
+      <button data-atab="reviews">Отзывы</button>
       <button data-atab="stats">Статистика</button>
     </div>
     <div id="adminProducts"></div>
     <div id="adminRequests" hidden></div>
+    <div id="adminReviews" hidden></div>
     <div id="adminStats" hidden></div>
   </div>
   <button class="fab" id="addProductFab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -421,6 +441,7 @@ const ADMIN_PASSWORD = "admin2026"; /* тестовый пароль для вх
 /* ---------- BACKEND (Cloudflare Worker) ---------- */
 /* После деплоя воркера впишите сюда его адрес, например "https://psn-api.ваш-акк.workers.dev" */
 const API_BASE = "https://psn-api.psn-store.workers.dev";
+const REVIEWS_CHANNEL_LINK = "https://t.me/appleiphoneoptfeedback"; /* канал с отзывами — кнопка "Все отзывы" ведёт сюда */
 const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2", unlocked:"ish_unlocked_admin", adminToken:"ish_admin_token" };
 function safeGet(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
 function safeSet(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(e){ return false; } }
@@ -534,15 +555,16 @@ function readFileAsDataURL(file){
   });
 }
 function dataUrlToBlob(dataUrl){ return fetch(dataUrl).then(r=>r.blob()); }
-async function uploadToServer(blob, filename){
+async function uploadToServerRaw(blob, filename){
   if(!API_BASE || API_BASE.includes("example.workers.dev")) throw new Error("API_BASE не настроен");
   const form = new FormData(); form.append("file", blob, filename||"file");
   const resp = await fetch(API_BASE+"/api/admin/upload", { method:"POST", headers: adminAuthHeader(), body: form });
   backendOnline = true;
   if(!resp.ok) throw new Error("upload failed");
-  const data = await resp.json();
-  return data.url;
+  return resp.json();
 }
+async function uploadToServer(blob, filename){ return (await uploadToServerRaw(blob, filename)).url; }
+async function uploadToServerKey(blob, filename){ return (await uploadToServerRaw(blob, filename)).key; }
 function haptic(type){ try{ if(tg && tg.HapticFeedback){ if(type==="success"||type==="error"||type==="warning") tg.HapticFeedback.notificationOccurred(type); else tg.HapticFeedback.impactOccurred(type||"light"); } }catch(e){} }
 function showToast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.hidden=true,2400); }
 
@@ -593,6 +615,36 @@ async function loadProductsFromServer(){
     }
   }catch(e){ /* сервер ещё не настроен или недоступен — работаем с локальным/демо-каталогом */ }
 }
+function escHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+function starsHtml(n){ n=Math.max(0,Math.min(5,Number(n)||0)); return n ? "★".repeat(n)+"☆".repeat(5-n) : ""; }
+function openReviewsChannel(){
+  try{
+    if(!REVIEWS_CHANNEL_LINK || REVIEWS_CHANNEL_LINK.includes("REPLACE_WITH")) return;
+    if(tg && tg.openTelegramLink){ tg.openTelegramLink(REVIEWS_CHANNEL_LINK); return; }
+    window.open(REVIEWS_CHANNEL_LINK, "_blank");
+  }catch(e){}
+}
+async function loadReviewsFromServer(){
+  try{
+    const data = await apiJson("/api/reviews","GET");
+    if(data && Array.isArray(data.reviews)) renderReviews(data.reviews);
+  }catch(e){ /* сервер недоступен — просто не показываем блок отзывов */ }
+}
+function renderReviews(list){
+  const block = $("#reviewsBlock"), scroll = $("#reviewsScroll");
+  if(!list || !list.length){ block.hidden = true; return; }
+  block.hidden = false;
+  scroll.innerHTML = list.slice(0,20).map(r=>`
+    <div class="reviewCard">
+      ${r.photoUrl ? `<img class="rPhoto" src="${escHtml(r.photoUrl)}" alt="">` : ``}
+      ${r.rating ? `<div class="rStars">${starsHtml(r.rating)}</div>` : ``}
+      ${r.text ? `<div class="rText">${escHtml(r.text)}</div>` : ``}
+      <div class="rAuthor">${escHtml(r.author || "Покупатель PSN")}</div>
+    </div>
+  `).join("");
+}
+$("#reviewsAllBtn").addEventListener("click", e=>{ e.stopPropagation(); openReviewsChannel(); });
+$("#reviewsBlock").addEventListener("click", e=>{ if(!e.target.closest("#reviewsAllBtn")) openReviewsChannel(); });
 function findModel(id){ return allModels().find(m=>m.id===id); }
 
 function priceOf(m, sIdx, cIdx){ return Math.round(((m.basePrice||0) + (m.storages[sIdx]?m.storages[sIdx].d:0)) * (1 + (m.conditions[cIdx]?m.conditions[cIdx].pct:0)) / 100) * 100; }
@@ -1201,10 +1253,12 @@ function switchAdminTab(name){
   $all("[data-atab]").forEach(b=> b.classList.toggle("active", b.dataset.atab===name));
   $("#adminProducts").hidden = name!=="products";
   $("#adminRequests").hidden = name!=="requests";
+  $("#adminReviews").hidden = name!=="reviews";
   $("#adminStats").hidden = name!=="stats";
   $("#addProductFab").hidden = name!=="products";
   if(name==="products") renderAdminProducts();
   if(name==="requests") renderAdminRequests();
+  if(name==="reviews") renderAdminReviews();
   if(name==="stats") renderAdminStats();
 }
 function renderAdminProducts(){
@@ -1390,6 +1444,72 @@ document.addEventListener("click", e=>{
     renderAdminRequests(); updateAdminDot();
   }); }
 });
+let adminReviewsCache = [];
+let reviewFormPhotoKey = null;
+async function renderAdminReviews(){
+  let list = [];
+  try{ const data = await adminApi("/api/admin/reviews","GET"); list = data.reviews||[]; }catch(e){}
+  adminReviewsCache = list;
+  const formHtml = `
+    <div class="adminRow" style="flex-direction:column;align-items:stretch;gap:10px;">
+      <b style="font-size:13px;">Добавить отзыв вручную</b>
+      <div class="field"><label>Имя автора (необязательно)</label><input id="arAuthor" placeholder="Например, Иван"/></div>
+      <div class="field"><label>Текст отзыва</label><textarea id="arText" rows="3" placeholder="Что написал покупатель…"></textarea></div>
+      <div class="field"><label>Оценка</label><select id="arRating"><option value="0">Без оценки</option><option value="5">★★★★★ 5</option><option value="4">★★★★☆ 4</option><option value="3">★★★☆☆ 3</option><option value="2">★★☆☆☆ 2</option><option value="1">★☆☆☆☆ 1</option></select></div>
+      <div class="field"><label>Фото (необязательно)</label><input id="arPhotoInput" type="file" accept="image/*"/></div>
+      <span class="muted small" id="arPhotoStatus"></span>
+      <button class="btn btn-primary" id="arSaveBtn" type="button">Добавить отзыв</button>
+    </div>`;
+  const rowsHtml = list.length===0 ? '<p class="empty">Отзывов пока нет — добавьте вручную выше или подключите автоимпорт из канала.</p>' : list.map(r=>`
+    <div class="adminRow" style="align-items:flex-start;">
+      <div class="ai">
+        <b>${r.source==="channel"?"📢 Из канала":"✍️ Вручную"}${r.rating?" · "+starsHtml(r.rating):""}</b>
+        <span>${escHtml(r.author||"Покупатель PSN")}</span>
+        <span>${escHtml((r.text||"").slice(0,140))}${(r.text||"").length>140?"…":""}</span>
+        <span>${new Date(r.date).toLocaleString("ru-RU")}</span>
+      </div>
+      <div class="aBtns" style="flex-direction:column;gap:6px;align-items:flex-end;">
+        <button data-togglereview="${r.id}" title="${r.visible?"Скрыть":"Показать"}">${r.visible?ICON_CHECK:ICON_CLOSE}</button>
+        <button data-delreview="${r.id}">${ICON_TRASH}</button>
+      </div>
+    </div>`).join("");
+  $("#adminReviews").innerHTML = formHtml + rowsHtml;
+  $("#arPhotoInput").addEventListener("change", async e=>{
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    $("#arPhotoStatus").textContent = "Загрузка фото…";
+    try{ reviewFormPhotoKey = await uploadToServerKey(f, f.name||"review.jpg"); $("#arPhotoStatus").textContent = "Фото загружено ✓"; }
+    catch(err){ reviewFormPhotoKey = null; $("#arPhotoStatus").textContent = "Не удалось загрузить фото (сервер/хранилище недоступны)"; }
+  });
+  $("#arSaveBtn").addEventListener("click", async ()=>{
+    const author = $("#arAuthor").value.trim();
+    const text = $("#arText").value.trim();
+    const rating = Number($("#arRating").value)||0;
+    if(!text && !reviewFormPhotoKey){ showToast("Добавьте текст или фото"); return; }
+    try{
+      await adminApi("/api/admin/reviews","POST", { author: author||null, text, rating: rating||null, photoKey: reviewFormPhotoKey });
+      reviewFormPhotoKey = null;
+      showToast("Отзыв добавлен");
+      renderAdminReviews(); loadReviewsFromServer();
+    }catch(err){ showToast("Не удалось сохранить — сервер недоступен"); }
+  });
+}
+document.addEventListener("click", e=>{
+  const tr=e.target.closest("[data-togglereview]");
+  if(tr){
+    const rid=tr.dataset.togglereview;
+    const item = adminReviewsCache.find(r=>r.id===rid);
+    const nextVisible = item ? !item.visible : true;
+    (async ()=>{
+      try{ await adminApi(`/api/admin/reviews/${rid}`,"PUT",{visible:nextVisible}); renderAdminReviews(); loadReviewsFromServer(); }
+      catch(err){ showToast("Не удалось обновить — сервер недоступен"); }
+    })();
+  }
+  const dr=e.target.closest("[data-delreview]");
+  if(dr){ const rid=dr.dataset.delreview; confirmDialog("Удалить этот отзыв?", async ()=>{
+    try{ await adminApi(`/api/admin/reviews/${rid}`,"DELETE"); renderAdminReviews(); loadReviewsFromServer(); }
+    catch(err){ showToast("Не удалось удалить — сервер недоступен"); }
+  }); }
+});
 async function renderAdminStats(){
   const localFavs = getFavs().size, totalModels = allModels().length;
   let serverStats = null;
@@ -1466,6 +1586,7 @@ initTelegram();
 loadProductsFromServer();
 syncMyDataFromServer();
 reportVisit();
+loadReviewsFromServer();
 window.addEventListener("resize", ()=>{ if(!$("#gameView").hidden) setupCanvasIfNeeded(); });
 })();
 </script>
