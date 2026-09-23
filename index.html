@@ -235,9 +235,6 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .couponRow.locked{opacity:.5;}
 
 .admin{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;padding:var(--tg-safe-total-top) 16px calc(24px + env(safe-area-inset-bottom,0px));}
-.adminLogin{max-width:340px;margin:18vh auto 0;text-align:center;}
-.adminLogin .icon-btn{margin:0 auto 14px;width:52px;height:52px;}
-.adminLogin .icon-btn svg{width:24px;height:24px;}
 .adminStickyHead{background:var(--bg);}
 .adminHead{display:flex;align-items:center;gap:10px;padding:14px 0 10px;}
 .adminTabs{display:flex;gap:8px;margin-bottom:14px;padding-bottom:2px;}
@@ -272,7 +269,7 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
       </div>
     </div>
     <button class="icon-btn" id="searchToggle" aria-label="Поиск"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
-    <button class="icon-btn ghost" id="adminGearBtn" aria-label="Панель продавца"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span class="dot" id="adminDot" hidden></span></button>
+    <button class="icon-btn ghost" id="adminGearBtn" aria-label="Панель продавца" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span class="dot" id="adminDot" hidden></span></button>
   </header>
 
   <div class="searchbar" id="searchBar" hidden><input id="searchInput" placeholder="Модель…" /></div>
@@ -398,16 +395,6 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 <section class="modal" id="productEditModal" hidden></section>
 
 <section class="admin" id="adminOverlay" hidden>
-  <div class="adminLogin" id="adminLogin">
-    <button class="icon-btn" style="pointer-events:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></button>
-    <h3 style="margin-bottom:6px;">Панель продавца</h3>
-    <p class="muted small" style="margin-bottom:16px;">Только для владельца магазина.</p>
-    <form id="adminLoginForm">
-      <div class="field"><input id="adminPassInput" type="password" placeholder="Пароль" required/></div>
-      <button class="btn btn-primary" type="submit">Войти</button>
-    </form>
-    <button class="btn btn-ghost" id="adminCancelBtn" type="button" style="margin-top:8px;">Отмена</button>
-  </div>
   <div id="adminPanel" hidden>
     <div class="adminStickyHead">
       <div class="adminHead">
@@ -418,12 +405,14 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
         <button data-atab="products" class="active">Товары</button>
         <button data-atab="requests">Заявки</button>
         <button data-atab="reviews">Отзывы</button>
+        <button data-atab="users">Юзеры</button>
         <button data-atab="stats">Статистика</button>
       </div>
     </div>
     <div id="adminProducts"></div>
     <div id="adminRequests" hidden></div>
     <div id="adminReviews" hidden></div>
+    <div id="adminUsers" hidden></div>
     <div id="adminStats" hidden></div>
   </div>
   <button class="fab" id="addProductFab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -438,15 +427,14 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 const $=s=>document.querySelector(s), $all=s=>Array.from(document.querySelectorAll(s));
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
-const OWNER_TELEGRAM_ID = 2035945496; /* замените на свой числовой Telegram ID — тогда панель будет открываться у вас без пароля */
-const ADMIN_PASSWORD = "admin2026"; /* тестовый пароль для входа вне Telegram (и запасной вариант, если сервер недоступен) */
+const OWNER_TELEGRAM_ID = 2035945496; /* единственный Telegram ID, которому доступна шестерёнка и панель продавца */
 
 /* ---------- BACKEND (Cloudflare Worker) ---------- */
 /* После деплоя воркера впишите сюда его адрес, например "https://psn-api.ваш-акк.workers.dev" */
 const API_BASE = "https://psn-api.psn-store.workers.dev";
 const REVIEWS_CHANNEL_LINK = "https://t.me/appleiphoneoptfeedback"; /* канал с отзывами — кнопка "Все отзывы" ведёт сюда */
 const STORE_CHANNEL_USERNAME = "applepsn"; /* основной канал магазина — кнопка "Написать" на карточке товара ведёт сюда */
-const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2", unlocked:"ish_unlocked_admin", adminToken:"ish_admin_token" };
+const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2" };
 function safeGet(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
 function safeSet(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(e){ return false; } }
 
@@ -455,11 +443,7 @@ function tgInitDataHeader(){
   try{ return (tg && tg.initData) ? { "X-Telegram-Init-Data": tg.initData } : {}; }catch(e){ return {}; }
 }
 function adminAuthHeader(){
-  try{
-    if(isOwner() && tg && tg.initData) return { "X-Telegram-Init-Data": tg.initData };
-    const t = sessionStorage.getItem(LS.adminToken);
-    return t ? { "Authorization": "Bearer "+t } : {};
-  }catch(e){ return {}; }
+  try{ return (tg && tg.initData) ? { "X-Telegram-Init-Data": tg.initData } : {}; }catch(e){ return {}; }
 }
 async function api(path, opts={}){
   if(!API_BASE || API_BASE.includes("example.workers.dev")) throw new Error("API_BASE не настроен");
@@ -1238,32 +1222,21 @@ function drawGame(){
 let adminTab="products";
 function isOwner(){ try{ return !!(tg && tg.initDataUnsafe && tg.initDataUnsafe.user && OWNER_TELEGRAM_ID && tg.initDataUnsafe.user.id===OWNER_TELEGRAM_ID); }catch(e){ return false; } }
 function updateAdminDot(){
+  updateAdminGearVisibility();
+  if(!isOwner()) return;
   const n=getRequests().filter(r=>r.status==="new").length; $("#adminDot").hidden = n===0; /* мгновенно по локальным данным */
-  if(isOwner() || sessionStorage.getItem(LS.adminToken)){
-    adminApi("/api/admin/stats","GET").then(st=>{ $("#adminDot").hidden = !(st && st.newRequests>0); }).catch(()=>{});
-  }
+  adminApi("/api/admin/stats","GET").then(st=>{ $("#adminDot").hidden = !(st && st.newRequests>0); }).catch(()=>{});
+}
+function updateAdminGearVisibility(){
+  $("#adminGearBtn").hidden = !isOwner();
 }
 $("#adminGearBtn").addEventListener("click", ()=>{
+  if(!isOwner()) return; /* кнопка и так скрыта для всех, кроме владельца, — это ещё один барьер */
   $("#adminOverlay").hidden=false;
-  if(isOwner() || sessionStorage.getItem(LS.unlocked)==="1"){ showAdminPanel(); } else { $("#adminLogin").hidden=false; $("#adminPanel").hidden=true; $("#addProductFab").hidden=true; }
+  showAdminPanel();
 });
-$("#adminCancelBtn").addEventListener("click", ()=> $("#adminOverlay").hidden=true );
 $("#adminCloseBtn").addEventListener("click", ()=> $("#adminOverlay").hidden=true );
-$("#adminLoginForm").addEventListener("submit", async e=>{
-  e.preventDefault();
-  const pass = $("#adminPassInput").value;
-  backendOnline = false;
-  try{
-    const res = await apiJson("/api/admin/login","POST",{password:pass});
-    if(res && res.token){ try{ sessionStorage.setItem(LS.unlocked,"1"); sessionStorage.setItem(LS.adminToken,res.token); }catch(err){} showAdminPanel(); return; }
-  }catch(e){
-    if(backendOnline){ showToast("Неверный пароль"); return; }
-    /* сервер недоступен или ещё не настроен — пускаем по локальному паролю, но без синхронизации с сервером */
-    if(pass===ADMIN_PASSWORD){ try{ sessionStorage.setItem(LS.unlocked,"1"); sessionStorage.removeItem(LS.adminToken); }catch(err){} showAdminPanel(); showToast("Вход выполнен локально — сервер недоступен, изменения не будут синхронизированы"); return; }
-  }
-  showToast("Неверный пароль");
-});
-function showAdminPanel(){ $("#adminLogin").hidden=true; $("#adminPanel").hidden=false; switchAdminTab("products"); }
+function showAdminPanel(){ $("#adminPanel").hidden=false; switchAdminTab("products"); }
 $all("[data-atab]").forEach(b=> b.addEventListener("click", ()=> switchAdminTab(b.dataset.atab)));
 function switchAdminTab(name){
   adminTab=name;
@@ -1271,13 +1244,33 @@ function switchAdminTab(name){
   $("#adminProducts").hidden = name!=="products";
   $("#adminRequests").hidden = name!=="requests";
   $("#adminReviews").hidden = name!=="reviews";
+  $("#adminUsers").hidden = name!=="users";
   $("#adminStats").hidden = name!=="stats";
   $("#addProductFab").hidden = name!=="products";
   if(name==="products") renderAdminProducts();
   if(name==="requests") renderAdminRequests();
   if(name==="reviews") renderAdminReviews();
+  if(name==="users") renderAdminUsers();
   if(name==="stats") renderAdminStats();
 }
+async function renderAdminUsers(){
+  $("#adminUsers").innerHTML = '<p class="muted small">Загрузка…</p>';
+  let list = [];
+  try{ const data = await adminApi("/api/admin/users","GET"); list = data.users||[]; }
+  catch(e){ $("#adminUsers").innerHTML = '<p class="empty">Не удалось загрузить список — сервер недоступен.</p>'; return; }
+  if(!list.length){ $("#adminUsers").innerHTML = '<p class="empty">Пока никто не открывал приложение.</p>'; return; }
+  const fmtDate = d=> { try{ return new Date(d).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}); }catch(e){ return d||""; } };
+  $("#adminUsers").innerHTML = `<p class="muted small" style="margin-bottom:10px;">Всего пользователей: ${list.length}</p>` + list.map(u=>`
+    <div class="adminRow" style="align-items:flex-start;">
+      <div class="ai">
+        <b>${u.name?escapeHtmlClient(u.name):"Без имени"}${u.username?" · @"+escapeHtmlClient(u.username):""}</b>
+        <span>Заявок: ${u.requestsCount||0} · В избранном: ${u.favoritesCount||0} · Визитов: ${u.visits||0}</span>
+        <span>Впервые: ${fmtDate(u.firstSeen)} · Был(а): ${fmtDate(u.lastSeen)}</span>
+      </div>
+      ${u.username?`<div class="aBtns"><a href="https://t.me/${u.username}" target="_blank" rel="noopener" class="icon-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:18px;">💬</a></div>`:""}
+    </div>`).join("");
+}
+function escapeHtmlClient(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function renderAdminProducts(){
   const rows = allModels().map(m=>{
     const lo=minPrice(m), hi=priceOf(m, m.storages.length-1, m.conditions.length-1);
