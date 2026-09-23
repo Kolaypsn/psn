@@ -39,7 +39,7 @@
 }
 *{box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:15px;line-height:1.4;margin:0;}
-#app{max-width:520px;margin:0 auto;padding:0 16px 92px;min-height:100%;}
+#app{max-width:520px;margin:0 auto;padding:0 16px 92px;min-height:100%;padding-top:env(safe-area-inset-top,0);}
 h1,h2,h3{font-family:var(--font-display);margin:0;letter-spacing:-.01em;}
 .viewTitle,.brand-name,.detailTitle,.modalHead h3,.adminHead h3{font-family:var(--font-serif)!important;}
 button{font-family:inherit;}
@@ -1426,9 +1426,19 @@ function initTelegram(){
   try{
     if(tg){
       tg.ready(); tg.expand();
+      try{
+        if(tg.isVersionAtLeast && tg.isVersionAtLeast("8.0")){
+          if(typeof tg.requestFullscreen === "function") tg.requestFullscreen();
+          if(typeof tg.disableVerticalSwipes === "function") tg.disableVerticalSwipes();
+          if(typeof tg.lockOrientation === "function") tg.lockOrientation();
+        }
+      }catch(e){}
       if(tg.colorScheme) document.documentElement.dataset.theme = tg.colorScheme;
       syncChromeColor();
-      if(tg.onEvent) tg.onEvent("themeChanged", ()=>{ if(tg.colorScheme) document.documentElement.dataset.theme=tg.colorScheme; syncChromeColor(); });
+      if(tg.onEvent){
+        tg.onEvent("themeChanged", ()=>{ if(tg.colorScheme) document.documentElement.dataset.theme=tg.colorScheme; syncChromeColor(); });
+        tg.onEvent("fullscreenChanged", ()=>{ try{ syncChromeColor(); }catch(e){} });
+      }
     }
   }catch(e){}
 }
