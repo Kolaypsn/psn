@@ -442,6 +442,7 @@ const ADMIN_PASSWORD = "admin2026"; /* тестовый пароль для вх
 /* После деплоя воркера впишите сюда его адрес, например "https://psn-api.ваш-акк.workers.dev" */
 const API_BASE = "https://psn-api.psn-store.workers.dev";
 const REVIEWS_CHANNEL_LINK = "https://t.me/appleiphoneoptfeedback"; /* канал с отзывами — кнопка "Все отзывы" ведёт сюда */
+const STORE_CHANNEL_USERNAME = "applepsn"; /* основной канал магазина — кнопка "Написать" на карточке товара ведёт сюда */
 const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2", unlocked:"ish_unlocked_admin", adminToken:"ish_admin_token" };
 function safeGet(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
 function safeSet(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(e){ return false; } }
@@ -622,6 +623,14 @@ function openReviewsChannel(){
     if(!REVIEWS_CHANNEL_LINK || REVIEWS_CHANNEL_LINK.includes("REPLACE_WITH")) return;
     if(tg && tg.openTelegramLink){ tg.openTelegramLink(REVIEWS_CHANNEL_LINK); return; }
     window.open(REVIEWS_CHANNEL_LINK, "_blank");
+  }catch(e){}
+}
+function openStoreChat(prefilledText){
+  try{
+    if(!STORE_CHANNEL_USERNAME) return;
+    const url = `https://t.me/${STORE_CHANNEL_USERNAME}?text=${encodeURIComponent(prefilledText||"")}`;
+    if(tg && tg.openTelegramLink){ tg.openTelegramLink(url); return; }
+    window.open(url, "_blank");
   }catch(e){}
 }
 async function loadReviewsFromServer(){
@@ -826,12 +835,17 @@ function renderPicker(){
     <div class="btnRow">
       <button class="btn btn-secondary" id="detailFavBtn">${getFavs().has(m.id)?"В избранном ♥":"В избранное"}</button>
       <button class="btn btn-primary" id="detailBuyBtn">Оставить заявку</button>
-    </div>`;
+    </div>
+    <button class="btn btn-secondary" id="detailChatBtn" style="width:100%;margin-top:8px;">Связаться лично</button>`;
   $("#pkColors").innerHTML = m.colors.map((c,i)=>`<button class="swatch ${i===pick.colorIdx?"sel":""}" data-pk="color" data-i="${i}" style="background:${c.h};" title="${c.n}"></button>`).join("");
   $("#pkStorages").innerHTML = m.storages.map((s,i)=>`<button class="pickChip ${i===pick.storageIdx?"sel":""}" data-pk="storage" data-i="${i}">${s.l}</button>`).join("");
   if(m.conditions.length>1) $("#pkConds").innerHTML = m.conditions.map((c,i)=>`<button class="pickChip ${i===pick.condIdx?"sel":""}" data-pk="cond" data-i="${i}">${c.l}</button>`).join("");
   $("#detailFavBtn").onclick=()=>{ toggleFavSynced(m.id); renderPicker(); renderCatalog(); renderFavorites(); renderProfileCard(); };
   $("#detailBuyBtn").onclick=()=>openRequestModal(m, pick);
+  $("#detailChatBtn").onclick=()=>{
+    const text = `Здравствуйте! Интересует ${m.model}, ${m.storages[pick.storageIdx].l}, ${cond.l.toLowerCase()}`;
+    openStoreChat(text);
+  };
 }
 document.addEventListener("click", e=>{
   const pk = e.target.closest("[data-pk]"); if(!pk || !pick) return;
