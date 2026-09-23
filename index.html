@@ -8,6 +8,7 @@
 <style>
 :root{
   color-scheme:light;
+  --tg-content-safe-top:0px; --tg-content-safe-bottom:0px;
   --bg:#F7F5F1; --surface:#FFFFFF; --surface-2:#F1ECE3; --text:#1A1814; --text-secondary:#7C7568;
   --border:#E2DCCF; --accent:#8A6A2E; --gold:#8A6A2E; --success:#3C8C55; --danger:#C4392E; --warning:#B4791E;
   --chip-bg:#EFE9DE; --chip-text:#4A4438; --overlay:rgba(20,16,8,.45); --fav-bg:rgba(255,255,255,.85);
@@ -39,7 +40,7 @@
 }
 *{box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:15px;line-height:1.4;margin:0;}
-#app{max-width:520px;margin:0 auto;padding:0 16px 92px;min-height:100%;padding-top:env(safe-area-inset-top,0);}
+#app{max-width:520px;margin:0 auto;padding:0 16px 92px;min-height:100%;padding-top:calc(env(safe-area-inset-top,0px) + var(--tg-content-safe-top,0px));}
 h1,h2,h3{font-family:var(--font-display);margin:0;letter-spacing:-.01em;}
 .viewTitle,.brand-name,.detailTitle,.modalHead h3,.adminHead h3{font-family:var(--font-serif)!important;}
 button{font-family:inherit;}
@@ -50,7 +51,7 @@ button{font-family:inherit;}
 .tabular{font-variant-numeric:tabular-nums;}
 [hidden]{display:none!important;}
 
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:10px;padding:14px 0 10px;background:var(--bg);}
+.topbar{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--tg-content-safe-top,0px));z-index:20;display:flex;align-items:center;gap:10px;padding:14px 0 10px;background:var(--bg);}
 .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
 .brand-mark{width:34px;height:34px;border-radius:9px;background:var(--text);color:var(--gold);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-weight:600;font-size:16px;flex:none;}
 .brand-name{font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -224,7 +225,7 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .adminLogin{max-width:340px;margin:18vh auto 0;text-align:center;}
 .adminLogin .icon-btn{margin:0 auto 14px;width:52px;height:52px;}
 .adminLogin .icon-btn svg{width:24px;height:24px;}
-.adminHead{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);display:flex;align-items:center;gap:10px;padding:14px 0 10px;z-index:2;}
+.adminHead{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--tg-content-safe-top,0px));background:var(--bg);display:flex;align-items:center;gap:10px;padding:14px 0 10px;z-index:2;}
 .adminTabs{display:flex;gap:8px;margin-bottom:14px;}
 .adminTabs button{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:12.5px;}
 .adminTabs button.active{background:var(--text);color:var(--bg);border-color:var(--text);}
@@ -1422,6 +1423,16 @@ function syncChromeColor(){
     if(tg){ try{ if(tg.setHeaderColor) tg.setHeaderColor(bg); }catch(e){} try{ if(tg.setBackgroundColor) tg.setBackgroundColor(bg); }catch(e){} }
   }catch(e){}
 }
+function applyTgSafeAreas(){
+  try{
+    if(!tg) return;
+    const csa = tg.contentSafeAreaInset || {top:0,bottom:0,left:0,right:0};
+    const top = Math.max(0, Number(csa.top)||0);
+    const bottom = Math.max(0, Number(csa.bottom)||0);
+    document.documentElement.style.setProperty('--tg-content-safe-top', top+'px');
+    document.documentElement.style.setProperty('--tg-content-safe-bottom', bottom+'px');
+  }catch(e){}
+}
 function initTelegram(){
   try{
     if(tg){
@@ -1433,11 +1444,16 @@ function initTelegram(){
           if(typeof tg.lockOrientation === "function") tg.lockOrientation();
         }
       }catch(e){}
+      applyTgSafeAreas();
+      setTimeout(applyTgSafeAreas, 300);
+      setTimeout(applyTgSafeAreas, 1000);
       if(tg.colorScheme) document.documentElement.dataset.theme = tg.colorScheme;
       syncChromeColor();
       if(tg.onEvent){
         tg.onEvent("themeChanged", ()=>{ if(tg.colorScheme) document.documentElement.dataset.theme=tg.colorScheme; syncChromeColor(); });
-        tg.onEvent("fullscreenChanged", ()=>{ try{ syncChromeColor(); }catch(e){} });
+        tg.onEvent("fullscreenChanged", ()=>{ try{ syncChromeColor(); applyTgSafeAreas(); }catch(e){} });
+        tg.onEvent("safeAreaChanged", applyTgSafeAreas);
+        tg.onEvent("contentSafeAreaChanged", applyTgSafeAreas);
       }
     }
   }catch(e){}
