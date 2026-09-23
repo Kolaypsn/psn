@@ -452,7 +452,7 @@ const OWNER_TELEGRAM_ID = 2035945496; /* единственный Telegram ID, �
 const API_BASE = "https://psn-api.psn-store.workers.dev";
 const REVIEWS_CHANNEL_LINK = "https://t.me/appleiphoneoptfeedback"; /* канал с отзывами — кнопка "Все отзывы" ведёт сюда */
 const STORE_CHANNEL_USERNAME = "applepsn"; /* основной канал магазина — кнопка "Написать" на карточке товара ведёт сюда */
-const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2" };
+const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2", reviews:"ish_reviews_v1" };
 function safeGet(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
 function safeSet(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(e){ return false; } }
 
@@ -638,11 +638,18 @@ function openStoreChat(prefilledText){
     window.open(url, "_blank");
   }catch(e){}
 }
+function renderCachedReviews(){
+  const cached = safeGet(LS.reviews, null);
+  if(Array.isArray(cached) && cached.length) renderReviews(cached);
+}
 async function loadReviewsFromServer(){
   try{
     const data = await apiJson("/api/reviews","GET");
-    if(data && Array.isArray(data.reviews)) renderReviews(data.reviews);
-  }catch(e){ /* сервер недоступен — просто не показываем блок отзывов */ }
+    if(data && Array.isArray(data.reviews)){
+      safeSet(LS.reviews, data.reviews);
+      renderReviews(data.reviews);
+    }
+  }catch(e){ /* сервер недоступен — остаются закэшированные отзывы, если были */ }
 }
 function renderReviews(list){
   const block = $("#reviewsBlock"), scroll = $("#reviewsScroll");
@@ -1618,7 +1625,7 @@ function hideSplash(){
     setTimeout(()=>{ el.classList.add("hide"); setTimeout(()=>{ el.remove(); }, 400); }, wait);
   }catch(e){}
 }
-renderFamilyChips(); renderCatalog(); renderFaq(); updateAdminDot(); resetLevelUI();
+renderFamilyChips(); renderCatalog(); renderFaq(); updateAdminDot(); resetLevelUI(); renderCachedReviews();
 hideSplash();
 initTelegram();
 loadProductsFromServer();
