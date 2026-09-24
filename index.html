@@ -573,7 +573,7 @@ async function uploadToServerRaw(blob, filename){
 }
 async function uploadToServer(blob, filename){ return (await uploadToServerRaw(blob, filename)).url; }
 async function uploadToServerKey(blob, filename){ return (await uploadToServerRaw(blob, filename)).key; }
-function haptic(type){ try{ if(tg && tg.HapticFeedback){ if(type==="success"||type==="error"||type==="warning") tg.HapticFeedback.notificationOccurred(type); else tg.HapticFeedback.impactOccurred(type||"light"); } }catch(e){} }
+function haptic(type){ try{ if(tg && tg.HapticFeedback){ if(type==="success"||type==="error"||type==="warning") tg.HapticFeedback.notificationOccurred(type); else if(type==="selection") tg.HapticFeedback.selectionChanged(); else tg.HapticFeedback.impactOccurred(type||"light"); } }catch(e){} }
 function showToast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.hidden=true,2400); }
 
 /* ================= CATALOG DATA ================= */
@@ -732,7 +732,7 @@ const state = { view:"catalog", seg:"new", family:"all", search:"", sort:"popula
 function currentSet(){ return state.seg==="used" ? usedModels : newModels; }
 function uniqueFamilies(){ return Array.from(new Set(currentSet().map(m=>m.family))); }
 
-$all("[data-seg]").forEach(b=> b.addEventListener("click", ()=>{ state.seg=b.dataset.seg; state.family="all"; $all("[data-seg]").forEach(x=>x.classList.toggle("active",x===b)); renderFamilyChips(); renderCatalog(); }));
+$all("[data-seg]").forEach(b=> b.addEventListener("click", ()=>{ haptic("light"); state.seg=b.dataset.seg; state.family="all"; $all("[data-seg]").forEach(x=>x.classList.toggle("active",x===b)); renderFamilyChips(); renderCatalog(); }));
 
 function renderFamilyChips(){
   const fams = uniqueFamilies();
@@ -831,7 +831,7 @@ document.addEventListener("click", e=>{
 document.addEventListener("click", e=>{
   const fav=e.target.closest("[data-fav]");
   if(fav){ e.stopPropagation(); const id=fav.dataset.fav; toggleFavSynced(id); haptic("light"); renderCatalog(); renderFavorites(); renderProfileCard(); return; }
-  const open=e.target.closest("[data-open]"); if(open){ openPicker(open.dataset.open); }
+  const open=e.target.closest("[data-open]"); if(open){ haptic("light"); openPicker(open.dataset.open); }
 });
 $("#sortSelect").addEventListener("change", e=>{ state.sort=e.target.value; renderCatalog(); });
 $("#searchToggle").addEventListener("click", ()=>{ const sb=$("#searchBar"); sb.hidden=!sb.hidden; if(!sb.hidden) $("#searchInput").focus(); });
@@ -903,9 +903,9 @@ document.addEventListener("click", e=>{
 document.addEventListener("click", e=>{
   if(!pick) return;
   const dot=e.target.closest("[data-photodot]");
-  if(dot){ pick.photoIdx=Number(dot.dataset.photodot); renderPicker(); return; }
+  if(dot){ haptic("selection"); pick.photoIdx=Number(dot.dataset.photodot); renderPicker(); return; }
   const di=e.target.closest("#detailImgClick");
-  if(di){ const m=findModel(pick.modelId); if(m){ const photos=photosForColor(m, m.colors[pick.colorIdx].n); if(photos.length>1){ pick.photoIdx=((pick.photoIdx||0)+1)%photos.length; renderPicker(); } } }
+  if(di){ const m=findModel(pick.modelId); if(m){ const photos=photosForColor(m, m.colors[pick.colorIdx].n); if(photos.length>1){ haptic("selection"); pick.photoIdx=((pick.photoIdx||0)+1)%photos.length; renderPicker(); } } }
 });
 function closeDetail(){ $("#detailSheet").hidden=true; $("#detailBackdrop").hidden=true; try{ if(tg && tg.BackButton) tg.BackButton.hide(); }catch(e){} }
 $("#detailBackdrop").addEventListener("click", closeDetail);
@@ -963,7 +963,7 @@ const FAQ = [
  {q:"Как происходит доставка?",a:"Курьером по городу в день заказа или самовывозом. Оплата — после проверки устройства."}
 ];
 function renderFaq(){ $("#faq").innerHTML = FAQ.map((f,i)=>`<div class="faqItem" data-i="${i}"><div class="faqQ">${f.q}${ICON_CHEV}</div><div class="faqA">${f.a}</div></div>`).join(""); }
-document.addEventListener("click", e=>{ const q=e.target.closest(".faqQ"); if(q) q.parentElement.classList.toggle("open"); });
+document.addEventListener("click", e=>{ const q=e.target.closest(".faqQ"); if(q){ haptic("light"); q.parentElement.classList.toggle("open"); } });
 $("#contactTgBtn").addEventListener("click", ()=>{
   try{ if(tg && tg.openTelegramLink){ tg.openTelegramLink("https://t.me/"); return; } }catch(e){}
   showToast("Откройте чат магазина в Telegram");
@@ -985,8 +985,8 @@ $all(".tabBtn").forEach(b=> b.addEventListener("click", ()=>{ haptic("light"); s
 function confirmDialog(text, onYes, danger){
   $("#confirmModal").innerHTML = `<p style="margin:0 0 16px;font-size:14.5px;">${text}</p><div class="btnRow"><button class="btn btn-secondary" id="cfNo">Отмена</button><button class="btn ${danger===false?"btn-primary":"btn-danger"}" id="cfYes">${danger===false?"Ок":"Удалить"}</button></div>`;
   $("#confirmModal").hidden=false; $("#confirmBackdrop").hidden=false;
-  $("#cfNo").onclick=()=>{ $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; };
-  $("#cfYes").onclick=()=>{ $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; onYes(); };
+  $("#cfNo").onclick=()=>{ haptic("light"); $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; };
+  $("#cfYes").onclick=()=>{ haptic(danger===false?"success":"warning"); $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; onYes(); };
 }
 $("#confirmBackdrop").addEventListener("click", ()=>{ $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; });
 
@@ -1293,7 +1293,7 @@ $("#adminGearBtn").addEventListener("click", ()=>{
 });
 $("#adminCloseBtn").addEventListener("click", ()=> $("#adminOverlay").hidden=true );
 function showAdminPanel(){ $("#adminPanel").hidden=false; switchAdminTab("products"); }
-$all("[data-atab]").forEach(b=> b.addEventListener("click", ()=> switchAdminTab(b.dataset.atab)));
+$all("[data-atab]").forEach(b=> b.addEventListener("click", ()=> { haptic("light"); switchAdminTab(b.dataset.atab); }));
 function switchAdminTab(name){
   adminTab=name;
   $all("[data-atab]").forEach(b=> b.classList.toggle("active", b.dataset.atab===name));
@@ -1358,6 +1358,7 @@ function moveProduct(id, dir){
   if(idx<0 || swapIdx<0 || swapIdx>=arr.length) return;
   const tmp=arr[idx]; arr[idx]=arr[swapIdx]; arr[swapIdx]=tmp;
   arr.forEach((p,i)=>{ p.order=i; });
+  haptic("selection");
   if(isNew) saveNew(arr); else saveUsed(arr);
   renderAdminProducts();
   const cat = isNew?"new":"used";
@@ -1605,9 +1606,9 @@ async function renderAdminReviews(){
     try{
       await adminApi("/api/admin/reviews","POST", { author: author||null, text, rating: rating||null, photoKey: reviewFormPhotoKey });
       reviewFormPhotoKey = null;
-      showToast("Отзыв добавлен");
+      haptic("success"); showToast("Отзыв добавлен");
       renderAdminReviews(); loadReviewsFromServer();
-    }catch(err){ showToast("Не удалось сохранить — сервер недоступен"); }
+    }catch(err){ haptic("error"); showToast("Не удалось сохранить — сервер недоступен"); }
   });
 }
 document.addEventListener("click", e=>{
