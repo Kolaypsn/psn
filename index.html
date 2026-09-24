@@ -601,8 +601,8 @@ const DEFAULT_USED = [
  {id:"g17prom",model:"iPhone 17 Pro Max",family:"iPhone 17",year:2025,basePrice:82900,colors:[{n:"Cosmic Orange",h:"#c9622f"},{n:"Deep Blue",h:"#2e4a6b"},{n:"Серебристый",h:"#e3e3e0"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],12000),conditions:USED_COND,hit:true,desc:"Топ модель на вторичном рынке — почти как новая, но дешевле."}
 ];
 const DEFAULT_NEW = [
- {id:"n18pro",model:"iPhone 18 Pro",family:"iPhone 18",year:2026,isNew:true,basePrice:124990,colors:[{n:"Black",h:"#2b2b2d"},{n:"Silver",h:"#e3e3e0"},{n:"Glacier",h:"#cfe0e3"},{n:"Burgundy",h:"#5a2430"}],storages:st(["256 ГБ","512 ГБ","1 ТБ","2 ТБ"],20000),conditions:NEW_COND,hit:true,desc:"Новый, в заводской плёнке. Официальная поставка, гарантия Apple."},
- {id:"n18prom",model:"iPhone 18 Pro Max",family:"iPhone 18",year:2026,isNew:true,basePrice:134990,colors:[{n:"Black",h:"#2b2b2d"},{n:"Silver",h:"#e3e3e0"},{n:"Glacier",h:"#cfe0e3"},{n:"Burgundy",h:"#5a2430"}],storages:st(["256 ГБ","512 ГБ","1 ТБ","2 ТБ"],22000),conditions:NEW_COND,desc:"Самый большой экран и автономность в истории iPhone. Запечатан, не вскрывался."}
+ {id:"n18pro",model:"iPhone 18 Pro",family:"iPhone 18",year:2026,isNew:true,basePrice:124990,colors:[{n:"Black",h:"#2b2b2d"},{n:"Silver",h:"#e3e3e0"},{n:"Glacier",h:"#cfe0e3"},{n:"Burgundy",h:"#5a2430"}],storages:st(["256 ГБ","512 ГБ","1 ТБ","2 ТБ"],20000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,hit:true,desc:"Новый, в заводской плёнке. Официальная поставка, гарантия Apple."},
+ {id:"n18prom",model:"iPhone 18 Pro Max",family:"iPhone 18",year:2026,isNew:true,basePrice:134990,colors:[{n:"Black",h:"#2b2b2d"},{n:"Silver",h:"#e3e3e0"},{n:"Glacier",h:"#cfe0e3"},{n:"Burgundy",h:"#5a2430"}],storages:st(["256 ГБ","512 ГБ","1 ТБ","2 ТБ"],22000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,desc:"Самый большой экран и автономность в истории iPhone. Запечатан, не вскрывался."}
 ];
 
 function getUsed(){ return safeGet(LS.products+"_used", null) || DEFAULT_USED.map(p=>({...p})); }
@@ -668,8 +668,13 @@ $("#reviewsAllBtn").addEventListener("click", e=>{ e.stopPropagation(); openRevi
 $("#reviewsBlock").addEventListener("click", e=>{ if(!e.target.closest("#reviewsAllBtn")) openReviewsChannel(); });
 function findModel(id){ return allModels().find(m=>m.id===id); }
 
-function priceOf(m, sIdx, cIdx){ return Math.round(((m.basePrice||0) + (m.storages[sIdx]?m.storages[sIdx].d:0)) * (1 + (m.conditions[cIdx]?m.conditions[cIdx].pct:0)) / 100) * 100; }
-function minPrice(m){ return priceOf(m,0,0); }
+function priceOf(m, sIdx, cIdx, simIdx){
+  const storageD = m.storages[sIdx]?m.storages[sIdx].d:0;
+  const sims = m.sims;
+  const simD = (sims && sims.length) ? (sims[simIdx||0] ? sims[simIdx||0].d : 0) : 0;
+  return Math.round(((m.basePrice||0) + storageD + simD) * (1 + (m.conditions[cIdx]?m.conditions[cIdx].pct:0)) / 100) * 100;
+}
+function minPrice(m){ return priceOf(m,0,0,0); }
 
 function getFavs(){ return new Set(safeGet(LS.favs, [])); }
 function saveFavs(set){ safeSet(LS.favs, Array.from(set)); }
@@ -814,14 +819,15 @@ let pick = null; // {modelId, colorIdx, storageIdx, condIdx, photoIdx}
 let peMedia = {photos:[], video:null};
 function openPicker(id){
   const m = findModel(id); if(!m) return;
-  pick = {modelId:id, colorIdx:0, storageIdx:0, condIdx: m.conditions.length>1?1:0, photoIdx:0};
+  pick = {modelId:id, colorIdx:0, storageIdx:0, condIdx: m.conditions.length>1?1:0, simIdx:0, photoIdx:0};
   renderPicker();
   $("#detailSheet").hidden=false; $("#detailBackdrop").hidden=false;
   try{ if(tg && tg.BackButton){ tg.BackButton.show(); tg.BackButton.onClick(closeDetail); } }catch(e){}
 }
 function renderPicker(){
   const m = findModel(pick.modelId); if(!m) return;
-  const price = priceOf(m, pick.storageIdx, pick.condIdx);
+  const hasSims = m.sims && m.sims.length>1;
+  const price = priceOf(m, pick.storageIdx, pick.condIdx, pick.simIdx);
   const cond = m.conditions[pick.condIdx];
   const photos = (m.media && m.media.photos) || [];
   const hasPhotos = photos.length>0;
@@ -831,9 +837,10 @@ function renderPicker(){
     <div class="detailImg"${hasPhotos&&photos.length>1?` id="detailImgClick" style="cursor:pointer;"`:""}>${mainMedia}</div>
     ${hasPhotos&&photos.length>1?`<div class="mediaDots">${photos.map((_,i)=>`<span class="mediaDot ${i===(pick.photoIdx||0)?"on":""}" data-photodot="${i}"></span>`).join("")}</div>`:""}
     <div class="detailTitle">${m.model}</div>
-    <div class="detailSub muted small">${m.colors[pick.colorIdx].n} · ${m.storages[pick.storageIdx].l}</div>
+    <div class="detailSub muted small">${m.colors[pick.colorIdx].n} · ${m.storages[pick.storageIdx].l}${hasSims?" · "+m.sims[pick.simIdx].l:""}</div>
     <div class="pickBlock"><label>Цвет</label><div class="swatches" id="pkColors"></div></div>
     <div class="pickBlock"><label>Память</label><div class="pickChips" id="pkStorages"></div></div>
+    ${hasSims?`<div class="pickBlock"><label>Конфигурация SIM</label><div class="pickChips" id="pkSims"></div></div>`:""}
     ${m.conditions.length>1?`<div class="pickBlock"><label>Состояние</label><div class="pickChips" id="pkConds"></div></div>`:`<div class="pickBlock"><label>Состояние</label><div class="muted small">Новый, запечатан в заводской плёнке</div></div>`}
     <div class="detailPriceRow"><span class="detailPrice tabular">${fmt(price)}</span></div>
     <table class="specTable">
@@ -851,11 +858,12 @@ function renderPicker(){
     <button class="btn btn-secondary" id="detailChatBtn" style="width:100%;margin-top:8px;">Связаться лично</button>`;
   $("#pkColors").innerHTML = m.colors.map((c,i)=>`<button class="swatch ${i===pick.colorIdx?"sel":""}" data-pk="color" data-i="${i}" style="background:${c.h};" title="${c.n}"></button>`).join("");
   $("#pkStorages").innerHTML = m.storages.map((s,i)=>`<button class="pickChip ${i===pick.storageIdx?"sel":""}" data-pk="storage" data-i="${i}">${s.l}</button>`).join("");
+  if(hasSims) $("#pkSims").innerHTML = m.sims.map((s,i)=>`<button class="pickChip ${i===pick.simIdx?"sel":""}" data-pk="sim" data-i="${i}">${s.l}</button>`).join("");
   if(m.conditions.length>1) $("#pkConds").innerHTML = m.conditions.map((c,i)=>`<button class="pickChip ${i===pick.condIdx?"sel":""}" data-pk="cond" data-i="${i}">${c.l}</button>`).join("");
   $("#detailFavBtn").onclick=()=>{ toggleFavSynced(m.id); renderPicker(); renderCatalog(); renderFavorites(); renderProfileCard(); };
   $("#detailBuyBtn").onclick=()=>openRequestModal(m, pick);
   $("#detailChatBtn").onclick=()=>{
-    const text = `Здравствуйте! Интересует ${m.model}, ${m.storages[pick.storageIdx].l}, ${cond.l.toLowerCase()}`;
+    const text = `Здравствуйте! Интересует ${m.model}, ${m.storages[pick.storageIdx].l}${hasSims?", "+m.sims[pick.simIdx].l:""}, ${cond.l.toLowerCase()}`;
     openStoreChat(text);
   };
 }
@@ -864,6 +872,7 @@ document.addEventListener("click", e=>{
   const i = Number(pk.dataset.i);
   if(pk.dataset.pk==="color") pick.colorIdx=i;
   if(pk.dataset.pk==="storage") pick.storageIdx=i;
+  if(pk.dataset.pk==="sim") pick.simIdx=i;
   if(pk.dataset.pk==="cond") pick.condIdx=i;
   haptic("light"); renderPicker();
 });
@@ -880,8 +889,9 @@ $("#detailBackdrop").addEventListener("click", closeDetail);
 /* ---------- REQUEST MODAL (buy lead) ---------- */
 function openRequestModal(m, pk){
   const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
-  const price = priceOf(m, pk.storageIdx, pk.condIdx);
-  const title = `${m.model}, ${m.colors[pk.colorIdx].n}, ${m.storages[pk.storageIdx].l}, ${m.conditions[pk.condIdx].l}`;
+  const hasSims = m.sims && m.sims.length>1;
+  const price = priceOf(m, pk.storageIdx, pk.condIdx, pk.simIdx);
+  const title = `${m.model}, ${m.colors[pk.colorIdx].n}, ${m.storages[pk.storageIdx].l}${hasSims?", "+m.sims[pk.simIdx].l:""}, ${m.conditions[pk.condIdx].l}`;
   $("#requestModal").innerHTML = `
     <div class="modalHead"><h3>Заявка на покупку</h3><button class="icon-btn" id="reqCloseBtn">${ICON_CLOSE}</button></div>
     <p class="muted small" style="margin-bottom:12px;">${title} — ${fmt(price)}</p>
@@ -974,9 +984,6 @@ const LEVELS = [
 /* Пороги наград — в «жизненных» (накопленных, не потраченных) монетах. Ориентир калибровки:
    рядовой вовлечённый раунд ~150 монет/мин активной игры, так что ~5000 ≈ полчаса игры, ~10000 ≈ час. */
 const ACHIEVEMENTS = [
- {code:"SAVE5", label:"−5% на покупку", desc:"Заработайте 300 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=300},
- {code:"SAVE10", label:"−10% на покупку", desc:"Заработайте 1200 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=1200},
- {code:"SAVE15", label:"−15% на покупку", desc:"Заработайте 3000 ₽ в игре", icon:ICON_PERCENT, need:s=>s.lifetime>=3000},
  {code:"FREESHIP", label:"Бесплатная доставка", desc:"Заработайте 5000 ₽ в игре — это примерно полчаса активной игры", icon:ICON_TRUCK, need:s=>s.lifetime>=5000},
  {code:"FREECABLE", label:"Кабель в подарок", desc:"Заработайте 10000 ₽ в игре — это примерно час активной игры", icon:ICON_CABLE, need:s=>s.lifetime>=10000}
 ];
@@ -1326,8 +1333,10 @@ document.addEventListener("click", e=>{
 $("#addProductFab").addEventListener("click", ()=> openProductEdit(null));
 function fmtColorsForEdit(colors){ return colors.map(c=>c.n+"|"+c.h).join("\n"); }
 function fmtStoragesForEdit(storages){ return storages.map(s=>s.l+"|"+s.d).join("\n"); }
+function fmtSimsForEdit(sims){ return (sims||[]).map(s=>s.l+"|"+s.d).join("\n"); }
 function parseColors(text){ return text.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{ const [n,h]=l.split("|").map(x=>x&&x.trim()); return {n:n||"Цвет", h:/^#[0-9a-fA-F]{6}$/.test(h)?h:"#5a5a5f"}; }); }
 function parseStorages(text){ return text.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{ const [lab,d]=l.split("|").map(x=>x&&x.trim()); return {l:lab||"128 ГБ", d:Number(d)||0}; }); }
+function parseSims(text){ return text.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{ const [lab,d]=l.split("|").map(x=>x&&x.trim()); return {l:lab||"Физическая SIM + eSIM", d:Number(d)||0}; }); }
 function renderPeMediaPhotos(){
   const el=$("#peMediaPhotos"); if(!el) return;
   el.innerHTML = peMedia.photos.length
@@ -1358,6 +1367,7 @@ function openProductEdit(id){
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;"><input type="checkbox" id="peHit" ${m.hit?"checked":""}/> Отметить как «Хит»</label>
     <div class="field"><label>Цвета (по одному в строке: Название|HEX)</label><textarea id="peColors" style="min-height:80px;">${fmtColorsForEdit(m.colors)}</textarea><div class="hint">Пример: Чёрный|#2c2c2e</div></div>
     <div class="field"><label>Объёмы памяти (по одному в строке: Название|Наценка ₽)</label><textarea id="peStorages" style="min-height:70px;">${fmtStoragesForEdit(m.storages)}</textarea><div class="hint">Первая строка — самый дешёвый вариант, наценка 0</div></div>
+    <div class="field"><label>Конфигурация SIM (необязательно, по одной в строке: Название|Наценка ₽)</label><textarea id="peSims" style="min-height:60px;">${fmtSimsForEdit(m.sims)}</textarea><div class="hint">Оставьте пустым, если у товара нет выбора SIM. Пример: Физическая SIM + eSIM|0 и Только eSIM|-3000 — цена меняется вместе с объёмом памяти</div></div>
     <div class="field"><label>Описание</label><textarea id="peDesc">${m.desc||""}</textarea></div>
     <div class="field">
       <label>Фото товара</label>
@@ -1411,11 +1421,13 @@ function openProductEdit(id){
       year:Number($("#peYear").value)||new Date().getFullYear(), basePrice:Number($("#peBase").value)||0,
       isNew, hit:$("#peHit").checked, desc:$("#peDesc").value.trim(),
       colors: parseColors($("#peColors").value), storages: parseStorages($("#peStorages").value),
+      sims: parseSims($("#peSims").value),
       conditions: isNew?NEW_COND:USED_COND,
       media: { photos: peMedia.photos.slice(), video: peMedia.video }
     };
     if(np.colors.length===0) np.colors=[{n:"Чёрный",h:"#2c2c2e"}];
     if(np.storages.length===0) np.storages=[{l:"128 ГБ",d:0}];
+    if(np.sims.length===0) delete np.sims;
     const wasNew = existing ? !!existing.isNew : null;
     let ok=true;
     if(id){
