@@ -482,6 +482,8 @@ const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
 const ICON_CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const ICON_ARROW_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+const ICON_ARROW_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>';
 const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
 const ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M7 10V7a5 5 0 0110 0v3"/></svg>';
 const ICON_PERCENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>';
@@ -604,7 +606,12 @@ const DEFAULT_NEW = [
  {id:"n18pro",model:"iPhone 18 Pro",family:"iPhone 18",year:2026,isNew:true,basePrice:124990,colors:[{n:"Black",h:"#2b2b2d"},{n:"Silver",h:"#e3e3e0"},{n:"Glacier",h:"#cfe0e3"},{n:"Burgundy",h:"#5a2430"}],storages:st(["256 ГБ","512 ГБ","1 ТБ","2 ТБ"],20000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,hit:true,desc:"Новый, в заводской плёнке. Официальная поставка, гарантия Apple."},
  {id:"n18prom",model:"iPhone 18 Pro Max",family:"iPhone 18",year:2026,isNew:true,basePrice:134990,colors:[{n:"Black",h:"#2b2b2d"},{n:"Silver",h:"#e3e3e0"},{n:"Glacier",h:"#cfe0e3"},{n:"Burgundy",h:"#5a2430"}],storages:st(["256 ГБ","512 ГБ","1 ТБ","2 ТБ"],22000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,desc:"Самый большой экран и автономность в истории iPhone. Запечатан, не вскрывался."},
  {id:"n17",model:"iPhone 17",family:"iPhone 17",year:2025,isNew:true,basePrice:69990,colors:[{n:"Lavender",h:"#c9c2de"},{n:"Sage",h:"#b3bfa8"},{n:"Mist Blue",h:"#aab9c4"},{n:"Белый",h:"#f2f2ee"},{n:"Чёрный",h:"#2c2c2e"}],storages:st(["256 ГБ","512 ГБ"],8000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,desc:"Новый, в заводской плёнке. Официальная поставка, гарантия Apple."},
- {id:"nair",model:"iPhone Air",family:"iPhone Air",year:2025,isNew:true,basePrice:79990,colors:[{n:"Sky Blue",h:"#a9c7dd"},{n:"Light Gold",h:"#e6d3ab"},{n:"Cloud White",h:"#f2f2ee"},{n:"Space Black",h:"#2c2c2e"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],10000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,hit:true,desc:"Самый тонкий iPhone линейки. Запечатан, не вскрывался."}
+ {id:"nair",model:"iPhone Air",family:"iPhone Air",year:2025,isNew:true,basePrice:79990,colors:[{n:"Sky Blue",h:"#a9c7dd"},{n:"Light Gold",h:"#e6d3ab"},{n:"Cloud White",h:"#f2f2ee"},{n:"Space Black",h:"#2c2c2e"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],10000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,hit:true,desc:"Самый тонкий iPhone линейки. Запечатан, не вскрывался."},
+ {id:"n17pro",model:"iPhone 17 Pro",family:"iPhone 17",year:2025,isNew:true,basePrice:89990,colors:[{n:"Cosmic Orange",h:"#c9622f"},{n:"Deep Blue",h:"#2e4a6b"},{n:"Серебристый",h:"#e3e3e0"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],11000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,desc:"Новый, в заводской плёнке. Официальная поставка, гарантия Apple."},
+ {id:"n17prom",model:"iPhone 17 Pro Max",family:"iPhone 17",year:2025,isNew:true,basePrice:99990,colors:[{n:"Cosmic Orange",h:"#c9622f"},{n:"Deep Blue",h:"#2e4a6b"},{n:"Серебристый",h:"#e3e3e0"}],storages:st(["256 ГБ","512 ГБ","1 ТБ"],12000),sims:[{l:"Физическая SIM + eSIM",d:0},{l:"Только eSIM",d:-3000}],conditions:NEW_COND,desc:"Новый, в заводской плёнке. Официальная поставка, гарантия Apple."},
+ {id:"nairpods5",model:"AirPods 5",family:"AirPods",year:2026,isNew:true,basePrice:14990,colors:[{n:"Белый",h:"#f2f2ee"}],storages:st(["Стандарт"],0),conditions:NEW_COND,desc:"Новые, в заводской упаковке. Официальная поставка, гарантия Apple."},
+ {id:"nairpodspro3",model:"AirPods Pro 3",family:"AirPods",year:2026,isNew:true,basePrice:24990,colors:[{n:"Белый",h:"#f2f2ee"}],storages:st(["Стандарт"],0),conditions:NEW_COND,hit:true,desc:"Новые, в заводской упаковке. Официальная поставка, гарантия Apple."},
+ {id:"nairpodsmax2",model:"AirPods Max 2",family:"AirPods",year:2026,isNew:true,basePrice:44990,colors:[{n:"Space Black",h:"#2c2c2e"},{n:"Серебристый",h:"#e3e3e0"},{n:"Sky Blue",h:"#a9c7dd"},{n:"Purple",h:"#8a6a9e"},{n:"Orange",h:"#c9622f"}],storages:st(["Стандарт"],0),conditions:NEW_COND,desc:"Новые, в заводской упаковке. Официальная поставка, гарантия Apple."}
 ];
 
 function getUsed(){ return safeGet(LS.products+"_used", null) || DEFAULT_USED.map(p=>({...p})); }
@@ -772,7 +779,7 @@ function cardHtml(m){
       ${hasPhoto?`<img src="${photos[0].url}" alt="${m.model}" style="width:100%;height:100%;object-fit:cover;">`:phoneSvg(m.colors[0].h, m)}
     </div>
     <div class="model">${m.model}</div>
-    <div class="spec"><div class="miniSwatches">${m.colors.map(c=>`<span class="miniSwatch" style="background:${c.h}" title="${c.n}"></span>`).join("")}</div><span class="specSep">·</span><span>от ${m.storages[0].l}</span></div>
+    <div class="spec"><div class="miniSwatches">${m.colors.map(c=>`<span class="miniSwatch" style="background:${c.h}" title="${c.n}"></span>`).join("")}</div>${m.storages.length>1?`<span class="specSep">·</span><span>от ${m.storages[0].l}</span>`:""}</div>
     <div class="priceRow"><span class="fromLbl">от</span><span class="price tabular">${fmt(minPrice(m))}</span></div>
   </div>`;
 }
@@ -854,9 +861,9 @@ function renderPicker(){
     <div class="detailImg"${hasPhotos&&photos.length>1?` id="detailImgClick" style="cursor:pointer;"`:""}>${mainMedia}</div>
     ${hasPhotos&&photos.length>1?`<div class="mediaDots">${photos.map((_,i)=>`<span class="mediaDot ${i===(pick.photoIdx||0)?"on":""}" data-photodot="${i}"></span>`).join("")}</div>`:""}
     <div class="detailTitle">${m.model}</div>
-    <div class="detailSub muted small">${m.colors[pick.colorIdx].n} · ${m.storages[pick.storageIdx].l}${hasSims?" · "+m.sims[pick.simIdx].l:""}</div>
+    <div class="detailSub muted small">${m.colors[pick.colorIdx].n}${m.storages.length>1?" · "+m.storages[pick.storageIdx].l:""}${hasSims?" · "+m.sims[pick.simIdx].l:""}</div>
     <div class="pickBlock"><label>Цвет</label><div class="swatches" id="pkColors"></div></div>
-    <div class="pickBlock"><label>Память</label><div class="pickChips" id="pkStorages"></div></div>
+    ${m.storages.length>1?`<div class="pickBlock"><label>Память</label><div class="pickChips" id="pkStorages"></div></div>`:""}
     ${hasSims?`<div class="pickBlock"><label>Конфигурация SIM</label><div class="pickChips" id="pkSims"></div></div>`:""}
     ${m.conditions.length>1?`<div class="pickBlock"><label>Состояние</label><div class="pickChips" id="pkConds"></div></div>`:`<div class="pickBlock"><label>Состояние</label><div class="muted small">Новый, запечатан в заводской плёнке</div></div>`}
     <div class="detailPriceRow"><span class="detailPrice tabular">${fmt(price)}</span></div>
@@ -874,13 +881,13 @@ function renderPicker(){
     </div>
     <button class="btn btn-secondary" id="detailChatBtn" style="width:100%;margin-top:8px;">Связаться лично</button>`;
   $("#pkColors").innerHTML = m.colors.map((c,i)=>`<button class="swatch ${i===pick.colorIdx?"sel":""}" data-pk="color" data-i="${i}" style="background:${c.h};" title="${c.n}"></button>`).join("");
-  $("#pkStorages").innerHTML = m.storages.map((s,i)=>`<button class="pickChip ${i===pick.storageIdx?"sel":""}" data-pk="storage" data-i="${i}">${s.l}</button>`).join("");
+  if(m.storages.length>1) $("#pkStorages").innerHTML = m.storages.map((s,i)=>`<button class="pickChip ${i===pick.storageIdx?"sel":""}" data-pk="storage" data-i="${i}">${s.l}</button>`).join("");
   if(hasSims) $("#pkSims").innerHTML = m.sims.map((s,i)=>`<button class="pickChip ${i===pick.simIdx?"sel":""}" data-pk="sim" data-i="${i}">${s.l}</button>`).join("");
   if(m.conditions.length>1) $("#pkConds").innerHTML = m.conditions.map((c,i)=>`<button class="pickChip ${i===pick.condIdx?"sel":""}" data-pk="cond" data-i="${i}">${c.l}</button>`).join("");
   $("#detailFavBtn").onclick=()=>{ toggleFavSynced(m.id); renderPicker(); renderCatalog(); renderFavorites(); renderProfileCard(); };
   $("#detailBuyBtn").onclick=()=>openRequestModal(m, pick);
   $("#detailChatBtn").onclick=()=>{
-    const text = `Здравствуйте! Интересует ${m.model}, ${m.storages[pick.storageIdx].l}${hasSims?", "+m.sims[pick.simIdx].l:""}, ${cond.l.toLowerCase()}`;
+    const text = `Здравствуйте! Интересует ${m.model}${m.storages.length>1?", "+m.storages[pick.storageIdx].l:""}${hasSims?", "+m.sims[pick.simIdx].l:""}, ${cond.l.toLowerCase()}`;
     openStoreChat(text);
   };
 }
@@ -908,7 +915,7 @@ function openRequestModal(m, pk){
   const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
   const hasSims = m.sims && m.sims.length>1;
   const price = priceOf(m, pk.storageIdx, pk.condIdx, pk.simIdx);
-  const title = `${m.model}, ${m.colors[pk.colorIdx].n}, ${m.storages[pk.storageIdx].l}${hasSims?", "+m.sims[pk.simIdx].l:""}, ${m.conditions[pk.condIdx].l}`;
+  const title = `${m.model}, ${m.colors[pk.colorIdx].n}${m.storages.length>1?", "+m.storages[pk.storageIdx].l:""}${hasSims?", "+m.sims[pk.simIdx].l:""}, ${m.conditions[pk.condIdx].l}`;
   $("#requestModal").innerHTML = `
     <div class="modalHead"><h3>Заявка на покупку</h3><button class="icon-btn" id="reqCloseBtn">${ICON_CLOSE}</button></div>
     <p class="muted small" style="margin-bottom:12px;">${title} — ${fmt(price)}</p>
@@ -1325,10 +1332,13 @@ function renderAdminProducts(){
     const lo=minPrice(m), hi=priceOf(m, m.storages.length-1, m.conditions.length-1);
     const adminThumbPhotos = photosForColor(m, m.colors[0].n);
     const hasPhoto = adminThumbPhotos.length>0;
+    const catArr = usedModels.includes(m) ? usedModels : newModels;
+    const idx = catArr.indexOf(m);
+    const isFirst = idx<=0, isLast = idx>=catArr.length-1;
     return `<div class="adminRow">
       <div class="thumbSm">${hasPhoto?`<img src="${adminThumbPhotos[0].url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`:phoneSvg(m.colors[0].h, m)}</div>
       <div class="ai"><b>${m.model}${m.isNew?" · новый":""}</b><span>${m.colors.length} цв. · ${m.storages.length} объём(ов) · ${fmt(lo)}${hi!==lo?"–"+fmt(hi):""}${m.media&&(m.media.photos&&m.media.photos.length||m.media.video)?" · 📎 медиа":""}</span></div>
-      <div class="aBtns"><button data-editp="${m.id}">${ICON_EDIT}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
+      <div class="aBtns"><button data-upp="${m.id}" ${isFirst?"disabled":""} style="${isFirst?"opacity:.3;":""}">${ICON_ARROW_UP}</button><button data-downp="${m.id}" ${isLast?"disabled":""} style="${isLast?"opacity:.3;":""}">${ICON_ARROW_DOWN}</button><button data-editp="${m.id}">${ICON_EDIT}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
     </div>`;
   }).join("");
   $("#adminProducts").innerHTML = rows + `<button class="btn btn-secondary" id="resetCatalogBtn" style="margin-top:10px;">Сбросить к демо-каталогу</button>`;
@@ -1338,7 +1348,24 @@ function renderAdminProducts(){
     try{ await adminApi("/api/admin/products/reset","POST"); await loadProductsFromServer(); }catch(e){}
   });
 }
+/* меняет местами товар с соседним в его категории (used/new) и сохраняет порядок (order)
+   для всех товаров категории — и локально, и на сервере, чтобы порядок был одинаков у всех пользователей */
+function moveProduct(id, dir){
+  const isNew = !!newModels.find(x=>x.id===id);
+  const arr = (isNew ? newModels : usedModels).slice();
+  const idx = arr.findIndex(x=>x.id===id);
+  const swapIdx = idx+dir;
+  if(idx<0 || swapIdx<0 || swapIdx>=arr.length) return;
+  const tmp=arr[idx]; arr[idx]=arr[swapIdx]; arr[swapIdx]=tmp;
+  arr.forEach((p,i)=>{ p.order=i; });
+  if(isNew) saveNew(arr); else saveUsed(arr);
+  renderAdminProducts();
+  const cat = isNew?"new":"used";
+  arr.forEach(p=> adminApi("/api/admin/products","PUT",{category:cat, product:p}).catch(()=>{}));
+}
 document.addEventListener("click", e=>{
+  const up=e.target.closest("[data-upp]"); if(up && !up.disabled) moveProduct(up.dataset.upp, -1);
+  const down=e.target.closest("[data-downp]"); if(down && !down.disabled) moveProduct(down.dataset.downp, 1);
   const ed=e.target.closest("[data-editp]"); if(ed) openProductEdit(ed.dataset.editp);
   const del=e.target.closest("[data-delp]"); if(del) confirmDialog("Удалить эту модель из каталога?", async ()=>{
     const id=del.dataset.delp;
