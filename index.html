@@ -745,7 +745,17 @@ function priceOf(m, sIdx, cIdx, simIdx){
   const simD = (sims && sims.length) ? (sims[simIdx||0] ? sims[simIdx||0].d : 0) : 0;
   return Math.round(((m.basePrice||0) + storageD + simD) * (1 + (m.conditions[cIdx]?m.conditions[cIdx].pct:0)) / 100) * 100;
 }
-function minPrice(m){ return priceOf(m,0,0,0); }
+function minPrice(m){
+  /* минимальная цена по модели: перебираем варианты SIM (у них бывает скидка, например "только eSIM"),
+     память не перебираем — st() всегда даёт возрастающие наценки, так что индекс 0 уже самый дешёвый. */
+  const simCount = (m.sims && m.sims.length) ? m.sims.length : 1;
+  let min = Infinity;
+  for(let i=0;i<simCount;i++){
+    const p = priceOf(m, 0, 0, i);
+    if(p<min) min = p;
+  }
+  return min;
+}
 
 function getFavs(){ return new Set(safeGet(LS.favs, [])); }
 function saveFavs(set){ safeSet(LS.favs, Array.from(set)); }
@@ -969,8 +979,50 @@ document.addEventListener("click", e=>{
   const di=e.target.closest("#detailImgClick");
   if(di){ const m=findModel(pick.modelId); if(m){ const photos=photosForColor(m, m.colors[pick.colorIdx].n); if(photos.length>1){ haptic("selection"); pick.photoIdx=((pick.photoIdx||0)+1)%photos.length; renderPicker(); } } }
 });
-function closeDetail(){ $("#detailSheet").hidden=true; $("#detailBackdrop").hidden=true; try{ if(tg && tg.BackButton) tg.BackButton.hide(); }catch(e){} }
+function closeDetail(){
+  const sheet = $("#detailSheet");
+  sheet.style.transition=""; sheet.style.transform="";
+  sheet.hidden=true; $("#detailBackdrop").hidden=true;
+  try{ if(tg && tg.BackButton) tg.BackButton.hide(); }catch(e){}
+}
 $("#detailBackdrop").addEventListener("click", closeDetail);
+
+/* ---------- свайп вниз для закрытия карточки товара ---------- */
+(function setupDetailSwipeClose(){
+  const sheet = $("#detailSheet");
+  const CLOSE_DIST = 120, CLOSE_VELOCITY = 0.55; // px и px/мс — «сильный» свайп проходит по любому из порогов
+  let dragging=false, startY=0, dy=0, startTime=0, pid=null;
+  function isInteractive(el){ return !!(el && el.closest && el.closest("button, input, select, textarea, a, .swatch, .pickChip, .mediaDot")); }
+  function onDown(e){
+    if(sheet.hidden || sheet.scrollTop>0 || isInteractive(e.target)) return;
+    dragging=true; startY=e.clientY; dy=0; startTime=Date.now(); pid=e.pointerId;
+    try{ sheet.setPointerCapture(pid); }catch(err){}
+  }
+  function onMove(e){
+    if(!dragging || e.pointerId!==pid) return;
+    dy = e.clientY - startY;
+    if(dy<0) dy=0;
+    sheet.style.transition="none";
+    sheet.style.transform = dy>0 ? `translateY(${dy}px)` : "";
+  }
+  function onUp(e){
+    if(!dragging || e.pointerId!==pid) return;
+    dragging=false;
+    const velocity = dy / Math.max(1, Date.now()-startTime);
+    sheet.style.transition = "transform .22s ease";
+    if(dy>CLOSE_DIST || velocity>CLOSE_VELOCITY){
+      haptic("light");
+      sheet.style.transform = "translateY(100%)";
+      setTimeout(closeDetail, 200);
+    } else {
+      sheet.style.transform = "";
+    }
+  }
+  sheet.addEventListener("pointerdown", onDown);
+  sheet.addEventListener("pointermove", onMove);
+  sheet.addEventListener("pointerup", onUp);
+  sheet.addEventListener("pointercancel", onUp);
+})();
 
 /* ---------- REQUEST MODAL (buy lead) ---------- */
 function openRequestModal(m, pk){
