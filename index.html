@@ -144,6 +144,17 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .modalHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .modalHead h3{font-size:17px;}
 
+#onboardOverlay{position:fixed;inset:0;z-index:98000;background:var(--overlay);display:flex;align-items:center;justify-content:center;padding:16px;transition:opacity .25s ease, visibility .25s ease;}
+#onboardOverlay.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.onboardCard{position:relative;width:100%;max-width:360px;background:var(--surface);border-radius:var(--radius-l);padding:28px 22px 22px;box-shadow:var(--shadow);text-align:center;}
+.onboardSkip{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;padding:6px;font-family:inherit;}
+.onboardIcon{font-size:40px;line-height:1;margin-bottom:14px;}
+.onboardTitle{font-family:var(--font-serif);font-size:19px;font-weight:700;margin-bottom:8px;}
+.onboardText{font-size:14px;line-height:1.5;margin:0 0 20px;}
+.onboardDots{display:flex;gap:6px;justify-content:center;margin-bottom:18px;}
+.onboardDot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:background .2s,transform .2s;}
+.onboardDot.on{background:var(--accent);transform:scale(1.3);}
+
 .field{margin-bottom:12px;}
 .field label{display:block;font-size:12.5px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;}
 .field input,.field select,.field textarea{width:100%;border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:var(--radius-s);padding:10px 12px;font-size:14.5px;font-family:inherit;outline:none;}
@@ -412,6 +423,15 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 <div class="backdrop" id="editBackdrop" hidden></div>
 <section class="modal" id="productEditModal" hidden></section>
 
+<div id="onboardOverlay" hidden>
+  <div class="onboardCard">
+    <button class="onboardSkip" id="onboardSkipBtn">Пропустить</button>
+    <div id="onboardSlideBody"></div>
+    <div class="onboardDots" id="onboardDots"></div>
+    <button class="btn btn-primary" id="onboardNextBtn">Далее</button>
+  </div>
+</div>
+
 <section class="admin" id="adminOverlay" hidden>
   <div id="adminPanel" hidden>
     <div class="adminStickyHead">
@@ -452,7 +472,8 @@ const OWNER_TELEGRAM_ID = 2035945496; /* единственный Telegram ID, �
 const API_BASE = "https://psn-api.psn-store.workers.dev";
 const REVIEWS_CHANNEL_LINK = "https://t.me/appleiphoneoptfeedback"; /* канал с отзывами — кнопка "Все отзывы" ведёт сюда */
 const STORE_CHANNEL_USERNAME = "applepsn"; /* основной канал магазина — кнопка "Написать" на карточке товара ведёт сюда */
-const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2", reviews:"ish_reviews_v1" };
+const OWNER_CHAT_USERNAME = "wbadmm"; /* личный аккаунт владельца — кнопка "Связаться лично" на карточке товара ведёт сюда */
+const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2", reviews:"ish_reviews_v1", onboarded:"ish_onboarded_v1" };
 function safeGet(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
 function safeSet(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(e){ return false; } }
 
@@ -577,8 +598,8 @@ function haptic(type){ try{ if(tg && tg.HapticFeedback){ if(type==="success"||ty
 function showToast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.hidden=true,2400); }
 
 /* ================= CATALOG DATA ================= */
-const USED_COND = [{l:"Хорошее",pct:-0.08,battery:"80–85%"},{l:"Отличное",pct:0,battery:"88–93%"},{l:"Идеальное",pct:0.10,battery:"94–100%"}];
-const NEW_COND = [{l:"Новый, запечатан",pct:0,battery:"100%"}];
+const USED_COND = [{l:"Отличное",pct:0}];
+const NEW_COND = [{l:"Новый, запечатан",pct:0}];
 function st(labels,step){ return labels.map((l,i)=>({l,d:i*step})); }
 
 const DEFAULT_USED = [
@@ -647,6 +668,47 @@ function openStoreChat(prefilledText){
     window.open(url, "_blank");
   }catch(e){}
 }
+function openOwnerChat(prefilledText){
+  try{
+    if(!OWNER_CHAT_USERNAME) return;
+    const url = `https://t.me/${OWNER_CHAT_USERNAME}?text=${encodeURIComponent(prefilledText||"")}`;
+    if(tg && tg.openTelegramLink){ tg.openTelegramLink(url); return; }
+    window.open(url, "_blank");
+  }catch(e){}
+}
+
+/* ---------- ONBOARDING (первый запуск) ---------- */
+const ONBOARD_SLIDES = [
+  {icon:"👋", title:"Добро пожаловать в PSN", text:"Новые и б/у iPhone с гарантией магазина. Покажем за 20 секунд, как здесь всё устроено."},
+  {icon:"🗂️", title:"Каталог", text:"Переключайтесь между «Новые» и «Б/У» вверху экрана, выбирайте модель — цена и характеристики обновятся сразу."},
+  {icon:"📝", title:"Заявка или личный чат", text:"Откройте карточку товара — там можно оставить заявку на покупку или написать нам лично в один клик."},
+  {icon:"💰", title:"Продать свой iPhone", text:"Вкладка «Продать» внизу — короткая форма, мы оценим устройство и сами свяжемся с вами."},
+  {icon:"🎮", title:"Бонусная игра", text:"Во вкладке «Игра» зарабатывайте монеты и меняйте их на купоны на скидку в разделе «Кабинет»."},
+];
+let onboardIdx = 0;
+function shouldShowOnboarding(){ return !safeGet(LS.onboarded, false); }
+function renderOnboardSlide(){
+  const s = ONBOARD_SLIDES[onboardIdx];
+  $("#onboardSlideBody").innerHTML = `<div class="onboardIcon">${s.icon}</div><h3 class="onboardTitle">${s.title}</h3><p class="onboardText muted">${s.text}</p>`;
+  $("#onboardDots").innerHTML = ONBOARD_SLIDES.map((_,i)=>`<span class="onboardDot ${i===onboardIdx?"on":""}"></span>`).join("");
+  $("#onboardNextBtn").textContent = onboardIdx===ONBOARD_SLIDES.length-1 ? "Начать" : "Далее";
+}
+function openOnboarding(){
+  onboardIdx=0; renderOnboardSlide();
+  $("#onboardOverlay").hidden=false;
+}
+function closeOnboarding(){
+  $("#onboardOverlay").classList.add("hide");
+  setTimeout(()=>{ $("#onboardOverlay").hidden=true; $("#onboardOverlay").classList.remove("hide"); }, 260);
+  safeSet(LS.onboarded, true);
+}
+$("#onboardNextBtn").addEventListener("click", ()=>{
+  haptic("light");
+  if(onboardIdx < ONBOARD_SLIDES.length-1){ onboardIdx++; renderOnboardSlide(); }
+  else closeOnboarding();
+});
+$("#onboardSkipBtn").addEventListener("click", ()=>{ haptic("light"); closeOnboarding(); });
+
 function renderCachedReviews(){
   const cached = safeGet(LS.reviews, null);
   if(Array.isArray(cached) && cached.length) renderReviews(cached);
@@ -865,13 +927,13 @@ function renderPicker(){
     <div class="pickBlock"><label>Цвет</label><div class="swatches" id="pkColors"></div></div>
     ${m.storages.length>1?`<div class="pickBlock"><label>Память</label><div class="pickChips" id="pkStorages"></div></div>`:""}
     ${hasSims?`<div class="pickBlock"><label>Конфигурация SIM</label><div class="pickChips" id="pkSims"></div></div>`:""}
-    ${m.conditions.length>1?`<div class="pickBlock"><label>Состояние</label><div class="pickChips" id="pkConds"></div></div>`:`<div class="pickBlock"><label>Состояние</label><div class="muted small">Новый, запечатан в заводской плёнке</div></div>`}
+    ${m.conditions.length>1?`<div class="pickBlock"><label>Состояние</label><div class="pickChips" id="pkConds"></div></div>`:`<div class="pickBlock"><label>Состояние</label><div class="muted small">${m.isNew?"Новый, запечатан в заводской плёнке":"Отличное состояние, без ремонтов"}</div></div>`}
     <div class="detailPriceRow"><span class="detailPrice tabular">${fmt(price)}</span></div>
     <table class="specTable">
       <tr><td>Состояние</td><td>${cond.l}</td></tr>
-      ${!m.isNew?`<tr><td>Ёмкость батареи</td><td>${cond.battery}</td></tr>`:""}
-      <tr><td>Год выпуска</td><td>${m.year}</td></tr>
-      <tr><td>Гарантия</td><td>${m.isNew?"официальная Apple":"14 дней магазина"}</td></tr>
+      ${!m.isNew?`<tr><td>Ремонт</td><td>Без ремонтов</td></tr>`:""}
+      ${m.isNew?`<tr><td>Год выпуска</td><td>${m.year}</td></tr>`:""}
+      <tr><td>Гарантия</td><td>${m.isNew?"официальная Apple":"Гарантия магазина"}</td></tr>
     </table>
     <p class="muted small" style="margin-bottom:16px;">${m.desc||""}</p>
     ${m.media && m.media.video?`<div class="pickBlock"><label>Видео</label><video src="${m.media.video}" controls playsinline style="width:100%;border-radius:var(--radius-m);background:#000;display:block;"></video></div>`:""}
@@ -888,7 +950,7 @@ function renderPicker(){
   $("#detailBuyBtn").onclick=()=>openRequestModal(m, pick);
   $("#detailChatBtn").onclick=()=>{
     const text = `Здравствуйте! Интересует ${m.model}${m.storages.length>1?", "+m.storages[pick.storageIdx].l:""}${hasSims?", "+m.sims[pick.simIdx].l:""}, ${cond.l.toLowerCase()}`;
-    openStoreChat(text);
+    openOwnerChat(text);
   };
 }
 document.addEventListener("click", e=>{
@@ -921,7 +983,6 @@ function openRequestModal(m, pk){
     <p class="muted small" style="margin-bottom:12px;">${title} — ${fmt(price)}</p>
     <form id="reqForm">
       <div class="field"><label>Имя</label><input id="reqName" required value="${tgUser?(tgUser.first_name||""):""}"/></div>
-      <div class="field"><label>Телефон</label><input id="reqPhone" type="tel" required placeholder="+7 900 000-00-00"/></div>
       <div class="field"><label>Комментарий</label><textarea id="reqComment" placeholder="Удобное время связи, вопросы…"></textarea></div>
       <button class="btn btn-primary" type="submit" id="reqSubmitBtn">Отправить</button>
     </form>`;
@@ -929,7 +990,7 @@ function openRequestModal(m, pk){
   $("#reqCloseBtn").onclick=closeRequestModal;
   $("#reqForm").onsubmit=e=>{
     e.preventDefault();
-    const req={id:"r"+Date.now(),type:"buy",title:title,price:price,name:$("#reqName").value,phone:$("#reqPhone").value,comment:$("#reqComment").value,date:new Date().toISOString(),status:"new"};
+    const req={id:"r"+Date.now(),type:"buy",title:title,price:price,name:$("#reqName").value,comment:$("#reqComment").value,date:new Date().toISOString(),status:"new"};
     submitRequest(req);
     haptic("success"); closeRequestModal(); closeDetail(); showToast("Заявка отправлена! Мы скоро свяжемся с вами.");
     updateAdminDot();
@@ -1710,6 +1771,7 @@ function hideSplash(){
 }
 renderFamilyChips(); renderCatalog(); renderFaq(); updateAdminDot(); resetLevelUI(); renderCachedReviews();
 hideSplash();
+if(shouldShowOnboarding()) setTimeout(openOnboarding, 900);
 initTelegram();
 loadProductsFromServer();
 syncMyDataFromServer();
