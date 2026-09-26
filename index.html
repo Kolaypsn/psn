@@ -284,6 +284,8 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .adminRow .aBtns{display:flex;gap:6px;flex:none;}
 .adminRow .aBtns button{width:32px;height:32px;border-radius:8px;border:none;background:var(--chip-bg);display:flex;align-items:center;justify-content:center;}
 .adminRow .aBtns button svg{width:15px;height:15px;}
+.adminRow .posInput{width:38px;height:32px;flex:none;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);text-align:center;font-size:13px;font-weight:700;-moz-appearance:textfield;}
+.adminRow .posInput::-webkit-outer-spin-button,.adminRow .posInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .statusPill{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;flex:none;}
 .statusPill.new{background:var(--accent);color:#fff;}
 .statusPill.in_progress{background:var(--warning);color:#fff;}
@@ -997,7 +999,10 @@ function filteredList(){
   if(state.sort==="price_asc") list = list.slice().sort((a,b)=>minPrice(a)-minPrice(b));
   else if(state.sort==="price_desc") list = list.slice().sort((a,b)=>minPrice(b)-minPrice(a));
   else if(state.sort==="new") list = list.slice().sort((a,b)=>b.year-a.year);
-  else list = list.slice().sort((a,b)=>(b.hit?1:0)-(a.hit?1:0));
+  /* «По популярности» (по умолчанию) — это порядок, который администратор выставил в панели номерами
+     позиций (order); раньше плашка «Хит» ещё и принудительно поднимала товар наверх независимо от этого
+     порядка — из-за этого позиция, выставленная в админке, могла не совпадать с тем, что видно в каталоге */
+  else list = list.slice().sort((a,b)=>(a.order||0)-(b.order||0));
   return list;
 }
 /* фото в media.photos могут быть старого формата (просто строка-URL, общая для всех цветов) или нового
@@ -1645,29 +1650,34 @@ function renderAdminProducts(){
     const hasPhoto = adminThumbPhotos.length>0;
     const catArr = usedModels.includes(m) ? usedModels : newModels;
     const idx = catArr.indexOf(m);
-    const isFirst = idx<=0, isLast = idx>=catArr.length-1;
     return `<div class="adminRow">
       <div class="thumbSm">${hasPhoto?`<img src="${adminThumbPhotos[0].url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`:phoneSvg(m.colors[adminDci].h, m)}</div>
       <div class="ai"><b>${m.model}${m.isNew?" · новый":""}${m.badgeNew?" · 🆕":""}</b><span>${m.colors.length} цв. · ${m.storages.length} объём(ов) · ${fmt(lo)}${hi!==lo?"–"+fmt(hi):""}${m.media&&(m.media.photos&&m.media.photos.length||m.media.video)?" · 📎 медиа":""}</span></div>
-      <div class="aBtns"><button data-upp="${m.id}" ${isFirst?"disabled":""} style="${isFirst?"opacity:.3;":""}">${ICON_ARROW_UP}</button><button data-downp="${m.id}" ${isLast?"disabled":""} style="${isLast?"opacity:.3;":""}">${ICON_ARROW_DOWN}</button><button data-editp="${m.id}">${ICON_EDIT}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
+      <input type="number" class="posInput" data-posid="${m.id}" value="${idx+1}" min="1" max="${catArr.length}" title="Позиция в каталоге (1 — первым)">
+      <div class="aBtns"><button data-editp="${m.id}">${ICON_EDIT}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
     </div>`;
   }).join("");
-  $("#adminProducts").innerHTML = rows + `<button class="btn btn-secondary" id="resetCatalogBtn" style="margin-top:10px;">Сбросить к демо-каталогу</button>`;
+  $("#adminProducts").innerHTML = (rows ? `<p class="hint" style="margin-bottom:8px;">Число слева — позиция товара в каталоге (1 — показывается первым в своей категории «Новые»/«Б/У»). Измените и нажмите Enter или уберите фокус с поля.</p>` : "") + rows + `<button class="btn btn-secondary" id="resetCatalogBtn" style="margin-top:10px;">Сбросить к демо-каталогу</button>`;
   $("#resetCatalogBtn").onclick=()=> confirmDialog("Сбросить каталог к демонстрационным товарам? Ваши изменения будут потеряны.", async ()=>{
     try{ localStorage.removeItem(LS.products+"_used"); localStorage.removeItem(LS.products+"_new"); }catch(e){}
     usedModels=DEFAULT_USED.map(p=>({...p})); newModels=DEFAULT_NEW.map(p=>({...p})); renderAll(); renderAdminProducts(); showToast("Каталог сброшен");
     try{ await adminApi("/api/admin/products/reset","POST"); await loadProductsFromServer(); }catch(e){}
   });
 }
-/* меняет местами товар с соседним в его категории (used/new) и сохраняет порядок (order)
-   для всех товаров категории — и локально, и на сервере, чтобы порядок был одинаков у всех пользователей */
-async function moveProduct(id, dir){
+/* переставляет товар на заданную 1-based позицию внутри его категории (used/new) и сохраняет порядок
+   (order) для всех товаров категории — и локально, и на сервере, чтобы порядок был одинаков у всех.
+   Раньше вместо номера были стрелочки «вверх/вниз» — заменены на прямой ввод позиции. */
+async function setProductPosition(id, newPos){
   const isNew = !!newModels.find(x=>x.id===id);
   const arr = (isNew ? newModels : usedModels).slice();
   const idx = arr.findIndex(x=>x.id===id);
-  const swapIdx = idx+dir;
-  if(idx<0 || swapIdx<0 || swapIdx>=arr.length) return;
-  const tmp=arr[idx]; arr[idx]=arr[swapIdx]; arr[swapIdx]=tmp;
+  if(idx<0) return;
+  let target = Math.round(Number(newPos))-1;
+  if(!Number.isFinite(target)) target = idx;
+  target = Math.max(0, Math.min(arr.length-1, target));
+  if(target===idx){ renderAdminProducts(); return; } /* невалидный/неизменившийся ввод — просто перерисуем поле как было */
+  const [item] = arr.splice(idx,1);
+  arr.splice(target,0,item);
   arr.forEach((p,i)=>{ p.order=i; });
   haptic("selection");
   if(isNew) saveNew(arr); else saveUsed(arr);
@@ -1679,9 +1689,14 @@ async function moveProduct(id, dir){
   }
   if(failed) showToast("Порядок изменён здесь, но не сохранился на сервере — проверьте связь и попробуйте ещё раз");
 }
+document.addEventListener("change", e=>{
+  const pos=e.target.closest(".posInput");
+  if(pos) setProductPosition(pos.dataset.posid, pos.value);
+});
+document.addEventListener("keydown", e=>{
+  if(e.key==="Enter" && e.target.closest(".posInput")) e.target.blur(); /* Enter подтверждает и уводит фокус — сработает change */
+});
 document.addEventListener("click", e=>{
-  const up=e.target.closest("[data-upp]"); if(up && !up.disabled) moveProduct(up.dataset.upp, -1);
-  const down=e.target.closest("[data-downp]"); if(down && !down.disabled) moveProduct(down.dataset.downp, 1);
   const ed=e.target.closest("[data-editp]"); if(ed) openProductEdit(ed.dataset.editp);
   const del=e.target.closest("[data-delp]"); if(del) confirmDialog("Удалить эту модель из каталога?", async ()=>{
     const id=del.dataset.delp;
