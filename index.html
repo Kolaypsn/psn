@@ -198,6 +198,13 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .mediaThumb{position:relative;width:56px;height:56px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex:none;}
 .mediaThumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .mediaThumb button{position:absolute;top:1px;right:1px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;}
+.mediaThumb button.rcropBtn{top:auto;bottom:1px;right:1px;font-size:10px;}
+#cropBackdrop{z-index:75;}
+#cropModal{z-index:76;}
+.cropStage{position:relative;width:100%;max-width:320px;aspect-ratio:1/1;margin:0 auto;overflow:hidden;border-radius:var(--radius-m);background:#111;touch-action:none;-webkit-user-select:none;user-select:none;}
+.cropStage img{position:absolute;top:0;left:0;max-width:none;pointer-events:none;-webkit-user-drag:none;}
+.cropStage.dragging{cursor:grabbing;}
+.cropStage:not(.dragging){cursor:grab;}
 .detailTitle{font-size:19px;font-weight:800;font-family:var(--font-display);text-align:center;}
 .detailSub{text-align:center;margin-bottom:4px;}
 .pickBlock{margin:14px 0;}
@@ -450,6 +457,9 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 <div class="backdrop" id="editBackdrop" hidden></div>
 <section class="modal" id="productEditModal" hidden></section>
 
+<div class="backdrop" id="cropBackdrop" hidden></div>
+<section class="modal" id="cropModal" hidden></section>
+
 <div id="onboardOverlay" hidden>
   <div class="onboardCard">
     <button class="onboardSkip" id="onboardSkipBtn">Пропустить</button>
@@ -621,6 +631,101 @@ function readFileAsDataURL(file){
   });
 }
 function dataUrlToBlob(dataUrl){ return fetch(dataUrl).then(r=>r.blob()); }
+
+/* ---------- редактор обрезки фото (квадратная рамка карточки товара) ----------
+   Карточки и фото товара показываются в квадратной рамке (object-fit:cover), поэтому широкое/высокое
+   фото раньше обрезалось браузером "втупую" по центру и могло выглядеть слишком приближенным.
+   Этот редактор даёт админу самому подвинуть/увеличить фото внутри квадрата перед сохранением —
+   что видно в рамке, то и попадёт в карточку. */
+let cropState = null;
+function cropClamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+function applyCropTransform(){
+  const cs = cropState; if(!cs) return;
+  const dispW = cs.natW*cs.scale, dispH = cs.natH*cs.scale;
+  cs.offX = cropClamp(cs.offX, cs.stageSize-dispW, 0);
+  cs.offY = cropClamp(cs.offY, cs.stageSize-dispH, 0);
+  const img = $("#cropImg"); if(!img) return;
+  img.style.width = dispW+"px"; img.style.height = dispH+"px";
+  img.style.left = cs.offX+"px"; img.style.top = cs.offY+"px";
+}
+function setCropZoom(sliderPct){
+  const cs = cropState; if(!cs) return;
+  const oldScale = cs.scale, newScale = cs.minScale*(sliderPct/100);
+  const c = cs.stageSize/2;
+  const imgX = (c-cs.offX)/oldScale, imgY = (c-cs.offY)/oldScale;
+  cs.scale = newScale;
+  cs.offX = c-imgX*newScale; cs.offY = c-imgY*newScale;
+  applyCropTransform();
+}
+function exportCropCanvas(){
+  const cs = cropState, OUT=900;
+  const canvas=document.createElement("canvas"); canvas.width=OUT; canvas.height=OUT;
+  const ctx=canvas.getContext("2d");
+  const sx=-cs.offX/cs.scale, sy=-cs.offY/cs.scale, sSize=cs.stageSize/cs.scale;
+  ctx.drawImage(cs.imgEl, sx, sy, sSize, sSize, 0, 0, OUT, OUT);
+  let hasAlpha=false;
+  try{ const {data}=ctx.getImageData(0,0,OUT,OUT); for(let i=3;i<data.length;i+=4){ if(data[i]<255){hasAlpha=true;break;} } }catch(e){}
+  return hasAlpha ? canvas.toDataURL("image/png") : canvas.toDataURL("image/jpeg",0.85);
+}
+/* открывает редактор обрезки — {file} для нового фото при загрузке, {url} для уже сохранённого фото
+   (пересжатого/обрезанного заново). возвращает Promise<{dataUrl,cropped}|null> (null — отменено/пропущено) */
+function openCropper({file, url}){
+  return new Promise((resolve)=>{
+    const isRecrop = !url ? false : true;
+    const openWithSrc = (src)=>{
+      const img=new Image();
+      if(isRecrop) img.crossOrigin="anonymous"; // фото отдаются с Access-Control-Allow-Origin:* — можно экспортировать в canvas
+      img.onload=()=>{
+        $("#cropModal").innerHTML = `
+          <div class="modalHead"><h3>Обрезка фото</h3><button class="icon-btn" id="cropCloseBtn">${ICON_CLOSE}</button></div>
+          <div class="cropStage" id="cropStage"><img id="cropImg" src="${src}" draggable="false" alt=""></div>
+          <div class="field" style="margin-top:12px;"><label>Масштаб</label><input type="range" id="cropZoom" min="100" max="300" value="100" step="1"/></div>
+          <div class="hint" style="margin-bottom:12px;">Перетащите фото пальцем/мышью и настройте масштаб — что видно в квадрате, то и попадёт на карточку товара.</div>
+          <div class="btnRow"><button class="btn btn-secondary" id="cropSkipBtn">${isRecrop?"Отмена":"Без обрезки"}</button><button class="btn btn-primary" id="cropApplyBtn">${isRecrop?"Сохранить обрезку":"Обрезать и добавить"}</button></div>`;
+        $("#cropModal").hidden=false; $("#cropBackdrop").hidden=false;
+        requestAnimationFrame(()=>{
+          const stage=$("#cropStage"); const stageSize=stage.clientWidth;
+          const minScale = Math.max(stageSize/img.naturalWidth, stageSize/img.naturalHeight);
+          cropState = { imgEl:img, natW:img.naturalWidth, natH:img.naturalHeight, stageSize, scale:minScale, minScale, dragging:false,
+            offX:(stageSize-img.naturalWidth*minScale)/2, offY:(stageSize-img.naturalHeight*minScale)/2 };
+          applyCropTransform();
+        });
+        const finish=(val)=>{ $("#cropModal").hidden=true; $("#cropBackdrop").hidden=true; cropState=null; resolve(val); };
+        $("#cropCloseBtn").onclick=()=>finish(null);
+        $("#cropSkipBtn").onclick = isRecrop ? (()=>finish(null)) : (async ()=>{ try{ const dataUrl=await compressImageFile(file,900); finish({dataUrl, cropped:false}); }catch(e){ finish(null); } });
+        $("#cropApplyBtn").onclick=()=>{ try{ const dataUrl=exportCropCanvas(); finish({dataUrl, cropped:true}); }catch(e){ finish(null); } };
+        $("#cropZoom").addEventListener("input", e=>setCropZoom(Number(e.target.value)));
+      };
+      img.onerror=()=>resolve(null);
+      img.src=src;
+    };
+    if(file){
+      const reader=new FileReader();
+      reader.onload=()=>openWithSrc(reader.result);
+      reader.onerror=()=>resolve(null);
+      reader.readAsDataURL(file);
+    } else if(url){
+      openWithSrc(url);
+    } else resolve(null);
+  });
+}
+$("#cropBackdrop").addEventListener("click", ()=>{ if(cropState){ $("#cropModal").hidden=true; $("#cropBackdrop").hidden=true; cropState=null; } });
+document.addEventListener("pointerdown", e=>{
+  if(!cropState) return;
+  const stage=e.target.closest("#cropStage"); if(!stage) return;
+  cropState.dragging=true; cropState.startX=e.clientX; cropState.startY=e.clientY; cropState.startOffX=cropState.offX; cropState.startOffY=cropState.offY;
+  stage.classList.add("dragging");
+  try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+  e.preventDefault();
+});
+document.addEventListener("pointermove", e=>{
+  if(!cropState || !cropState.dragging) return;
+  cropState.offX = cropState.startOffX + (e.clientX-cropState.startX);
+  cropState.offY = cropState.startOffY + (e.clientY-cropState.startY);
+  applyCropTransform();
+});
+document.addEventListener("pointerup", ()=>{ if(cropState){ cropState.dragging=false; const s=$("#cropStage"); if(s) s.classList.remove("dragging"); } });
+document.addEventListener("pointercancel", ()=>{ if(cropState){ cropState.dragging=false; const s=$("#cropStage"); if(s) s.classList.remove("dragging"); } });
 async function uploadToServerRaw(blob, filename){
   if(!API_BASE || API_BASE.includes("example.workers.dev")) throw new Error("API_BASE не настроен");
   const form = new FormData(); form.append("file", blob, filename||"file");
@@ -1556,7 +1661,7 @@ function renderAdminProducts(){
 }
 /* меняет местами товар с соседним в его категории (used/new) и сохраняет порядок (order)
    для всех товаров категории — и локально, и на сервере, чтобы порядок был одинаков у всех пользователей */
-function moveProduct(id, dir){
+async function moveProduct(id, dir){
   const isNew = !!newModels.find(x=>x.id===id);
   const arr = (isNew ? newModels : usedModels).slice();
   const idx = arr.findIndex(x=>x.id===id);
@@ -1566,9 +1671,13 @@ function moveProduct(id, dir){
   arr.forEach((p,i)=>{ p.order=i; });
   haptic("selection");
   if(isNew) saveNew(arr); else saveUsed(arr);
-  renderAdminProducts();
+  renderAdminProducts(); // локально порядок меняется сразу, не дожидаясь ответа сервера
   const cat = isNew?"new":"used";
-  arr.forEach(p=> adminApi("/api/admin/products","PUT",{category:cat, product:p}).catch(()=>{}));
+  let failed=false;
+  for(const p of arr){
+    try{ await adminApi("/api/admin/products","PUT",{category:cat, product:p}); }catch(e){ failed=true; }
+  }
+  if(failed) showToast("Порядок изменён здесь, но не сохранился на сервере — проверьте связь и попробуйте ещё раз");
 }
 document.addEventListener("click", e=>{
   const up=e.target.closest("[data-upp]"); if(up && !up.disabled) moveProduct(up.dataset.upp, -1);
@@ -1622,7 +1731,7 @@ function renderPeMediaPhotos(){
     const items = peMedia.photos.map((p,i)=>({url:p.url, color:p.color, i})).filter(p=>(p.color||null)===colorName);
     if(!items.length) return "";
     const label = colorName ? `Цвет: ${escapeHtmlClient(colorName)}${orphanNames.includes(colorName)?" (цвет удалён/переименован)":""}` : "Общие (показываются, если для цвета нет своих фото)";
-    return `<div style="margin-bottom:8px;"><div class="hint" style="margin-bottom:4px;">${label}</div><div class="mediaThumbs">${items.map(p=>`<div class="mediaThumb"><img src="${p.url}" alt=""><button type="button" data-rmphoto="${p.i}">×</button></div>`).join("")}</div></div>`;
+    return `<div style="margin-bottom:8px;"><div class="hint" style="margin-bottom:4px;">${label}</div><div class="mediaThumbs">${items.map(p=>`<div class="mediaThumb"><img src="${p.url}" alt=""><button type="button" class="rcropBtn" data-recrop="${p.i}" title="Обрезать заново">✂</button><button type="button" data-rmphoto="${p.i}">×</button></div>`).join("")}</div></div>`;
   }).join("") || `<span class="muted small">Фото не добавлены — в каталоге будет стандартная иконка</span>`;
 }
 function renderPeMediaVideo(){
@@ -1635,6 +1744,24 @@ function renderPeMediaVideo(){
 document.addEventListener("click", e=>{
   const rp=e.target.closest("[data-rmphoto]");
   if(rp){ peMedia.photos.splice(Number(rp.dataset.rmphoto),1); renderPeMediaPhotos(); }
+  const rc=e.target.closest("[data-recrop]");
+  if(rc){
+    const i = Number(rc.dataset.recrop);
+    const photo = peMedia.photos[i]; if(!photo) return;
+    openCropper({url:photo.url}).then(async (result)=>{
+      if(!result) return; // отменено
+      try{
+        const blob = await dataUrlToBlob(result.dataUrl);
+        const ext = result.dataUrl.startsWith("data:image/png") ? ".png" : ".jpg";
+        const url = await uploadToServer(blob, "photo-recrop"+ext);
+        peMedia.photos[i] = {url, color:photo.color};
+      }catch(upErr){
+        peMedia.photos[i] = {url: result.dataUrl, color:photo.color};
+        showToast("Сервер недоступен — фото сохранено только в этом браузере");
+      }
+      renderPeMediaPhotos();
+    });
+  }
 });
 function openProductEdit(id){
   const existing = id ? findModel(id) : null;
@@ -1678,16 +1805,16 @@ function openProductEdit(id){
     const uploadColor = $("#peUploadColor").value || null;
     let usedFallback=false;
     for(const f of files){
+      const cropResult = await openCropper({file:f}); // редактор обрезки — админ подгоняет фото под рамку карточки
+      if(!cropResult) continue; // отменено/пропущено этим кадром
+      const dataUrl = cropResult.dataUrl;
       try{
-        const dataUrl = await compressImageFile(f, 900);
-        try{
-          const blob = await dataUrlToBlob(dataUrl);
-          const ext = dataUrl.startsWith("data:image/png") ? ".png" : ".jpg";
-          const url = await uploadToServer(blob, (f.name||"photo").replace(/\.[^.]+$/,"")+ext);
-          peMedia.photos.push({url, color:uploadColor});
-        }catch(upErr){ peMedia.photos.push({url:dataUrl, color:uploadColor}); usedFallback=true; }
-      }
-      catch(err){ showToast("Не удалось загрузить одно из фото"); }
+        const blob = await dataUrlToBlob(dataUrl);
+        const ext = dataUrl.startsWith("data:image/png") ? ".png" : ".jpg";
+        const url = await uploadToServer(blob, (f.name||"photo").replace(/\.[^.]+$/,"")+ext);
+        peMedia.photos.push({url, color:uploadColor});
+      }catch(upErr){ peMedia.photos.push({url:dataUrl, color:uploadColor}); usedFallback=true; }
+      renderPeMediaPhotos();
     }
     if(usedFallback) showToast("Сервер недоступен — фото сохранены только в этом браузере");
     renderPeMediaPhotos(); e.target.value="";
@@ -1716,6 +1843,7 @@ function openProductEdit(id){
       conditions: isNew?NEW_COND:USED_COND,
       media: { photos: peMedia.photos.slice(), video: peMedia.video }
     };
+    if(existing && existing.order!=null) np.order = existing.order; // не сбрасывать порядок, расставленный стрелочками, при обычном редактировании карточки
     if(np.colors.length===0) np.colors=[{n:"Чёрный",h:"#2c2c2e"}];
     if(np.storages.length===0) np.storages=[{l:"128 ГБ",d:0}];
     if(np.sims.length===0) delete np.sims;
