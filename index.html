@@ -75,6 +75,16 @@ button{font-family:inherit;}
 .chip{flex:none;padding:8px 14px;border-radius:999px;background:var(--chip-bg);color:var(--chip-text);font-size:13.5px;font-weight:600;border:1px solid transparent;cursor:pointer;white-space:nowrap;}
 .chip.active{background:var(--text);color:var(--bg);}
 
+.notifyRow{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--chip-bg);border-radius:var(--radius-s);padding:10px 12px;margin:-4px 0 10px;}
+.notifyRow .notifyText{font-size:13px;color:var(--muted);line-height:1.35;}
+.switchCtl{position:relative;flex:none;width:44px;height:26px;}
+.switchCtl input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1;}
+.switchCtl .track{position:absolute;inset:0;background:var(--border);border-radius:999px;transition:background .18s ease;}
+.switchCtl .thumb{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s ease;}
+.switchCtl input:checked + .track{background:var(--accent, #34c759);}
+.switchCtl input:checked + .track + .thumb{transform:translateX(18px);}
+.switchCtl input:disabled{cursor:default;}
+
 .toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 0 12px;}
 select{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-s);padding:7px 10px;font-size:13px;}
 
@@ -334,7 +344,15 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
     <h2 class="viewTitle">Личный кабинет</h2>
     <div class="profileCard" id="profileCard"></div>
     <h3 class="sectionTitle">Избранное</h3>
-    <p class="muted small" style="margin:-6px 0 10px;">На товары в избранном придёт уведомление, если на них изменится цена.</p>
+    <div class="notifyRow" id="notifyPriceRow" hidden>
+      <span class="notifyText">Уведомлять об изменении цены на товары в избранном</span>
+      <label class="switchCtl">
+        <input type="checkbox" id="notifyPriceInput"/>
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+    </div>
+    <p class="muted small" id="notifyPriceHint" style="margin:-6px 0 10px;" hidden>На товары в избранном придёт уведомление, если на них изменится цена.</p>
     <div class="grid" id="favGrid"></div>
     <p class="empty" id="favEmpty" hidden>Пока пусто. Нажимайте на сердечко у товара, чтобы сохранить его здесь.</p>
     <h3 class="sectionTitle">Мои заявки</h3>
@@ -775,17 +793,41 @@ function saveRequests(list){ safeSet(LS.requests, list); }
 
 /* ---------- синхронизация личного кабинета через Telegram ID ---------- */
 function hasTgIdentity(){ try{ return !!(tg && tg.initData && tg.initDataUnsafe && tg.initDataUnsafe.user); }catch(e){ return false; } }
+let notifyPriceEnabled = true;
 async function syncMyDataFromServer(){
   if(!hasTgIdentity()) return;
   try{
-    const [fv, rq] = await Promise.all([
+    const [fv, rq, np] = await Promise.all([
       apiJson("/api/my/favorites","GET",undefined,tgInitDataHeader()),
       apiJson("/api/my/requests","GET",undefined,tgInitDataHeader()),
+      apiJson("/api/my/notify-price","GET",undefined,tgInitDataHeader()).catch(()=>null),
     ]);
     if(fv && Array.isArray(fv.favorites)) saveFavs(new Set(fv.favorites));
     if(rq && Array.isArray(rq.requests)) saveRequests(rq.requests);
+    if(np && typeof np.enabled==="boolean") notifyPriceEnabled = np.enabled;
     renderCatalog(); if(state.view==="favorites") renderCabinet(); updateAdminDot();
   }catch(e){ /* сервер недоступен — остаёмся с локальными данными этого устройства */ }
+}
+function renderNotifyPriceToggle(){
+  const row=$("#notifyPriceRow"), hint=$("#notifyPriceHint"), input=$("#notifyPriceInput");
+  if(hasTgIdentity()){
+    row.hidden=false; hint.hidden=true;
+    input.checked = !!notifyPriceEnabled;
+  } else {
+    row.hidden=true; hint.hidden=false;
+  }
+}
+async function setNotifyPriceEnabled(enabled){
+  const prev = notifyPriceEnabled;
+  notifyPriceEnabled = enabled;
+  try{
+    const res = await apiJson("/api/my/notify-price","POST",{enabled}, tgInitDataHeader());
+    if(res && typeof res.enabled==="boolean") notifyPriceEnabled = res.enabled;
+  }catch(e){
+    notifyPriceEnabled = prev;
+    renderNotifyPriceToggle();
+    showToast("Не удалось сохранить настройку");
+  }
 }
 async function reportVisit(){
   if(!hasTgIdentity()) return;
@@ -906,7 +948,8 @@ function renderMyRequests(){
       ${r.status==="new"?`<button class="mrCancel" data-cancelreq="${r.id}">Отменить заявку</button>`:""}
     </div>`).join("");
 }
-function renderCabinet(){ renderProfileCard(); renderMyRequests(); renderFavorites(); }
+function renderCabinet(){ renderProfileCard(); renderMyRequests(); renderFavorites(); renderNotifyPriceToggle(); }
+$("#notifyPriceInput").addEventListener("change", e=>{ haptic("light"); setNotifyPriceEnabled(e.target.checked); });
 document.addEventListener("click", e=>{
   const cr=e.target.closest("[data-cancelreq]");
   if(cr){ confirmDialog("Отменить эту заявку?", ()=>{ const rid=cr.dataset.cancelreq; const list=getRequests().filter(r=>r.id!==rid); saveRequests(list); renderMyRequests(); renderProfileCard(); updateAdminDot(); showToast("Заявка отменена"); if(hasTgIdentity()){ apiJson(`/api/my/requests/${rid}/cancel`,"POST",{}, tgInitDataHeader()).catch(()=>{}); } }); }
@@ -1002,23 +1045,35 @@ $("#detailBackdrop").addEventListener("click", closeDetail);
 (function setupDetailSwipeClose(){
   const sheet = $("#detailSheet");
   const CLOSE_DIST = 120, CLOSE_VELOCITY = 0.55; // px и px/мс — «сильный» свайп проходит по любому из порогов
-  let dragging=false, startY=0, dy=0, startTime=0, pid=null;
+  let dragging=false, startY=0, dy=0, startTime=0, pid=null, savedScrollY=0;
   function isInteractive(el){ return !!(el && el.closest && el.closest("button, input, select, textarea, a, .swatch, .pickChip, .mediaDot")); }
+  function lockBodyScroll(){
+    savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.style.position="fixed"; document.body.style.top=`-${savedScrollY}px`;
+    document.body.style.left="0"; document.body.style.right="0"; document.body.style.width="100%";
+  }
+  function unlockBodyScroll(){
+    document.body.style.position=""; document.body.style.top=""; document.body.style.left=""; document.body.style.right=""; document.body.style.width="";
+    window.scrollTo(0, savedScrollY);
+  }
   function onDown(e){
     if(sheet.hidden || sheet.scrollTop>0 || isInteractive(e.target)) return;
     dragging=true; startY=e.clientY; dy=0; startTime=Date.now(); pid=e.pointerId;
+    lockBodyScroll(); // иначе на телефоне при свайпе вниз вместе с карточкой скроллится и каталог под ней
     try{ sheet.setPointerCapture(pid); }catch(err){}
   }
   function onMove(e){
     if(!dragging || e.pointerId!==pid) return;
     dy = e.clientY - startY;
     if(dy<0) dy=0;
+    if(dy>0) e.preventDefault();
     sheet.style.transition="none";
     sheet.style.transform = dy>0 ? `translateY(${dy}px)` : "";
   }
   function onUp(e){
     if(!dragging || e.pointerId!==pid) return;
     dragging=false;
+    unlockBodyScroll();
     const velocity = dy / Math.max(1, Date.now()-startTime);
     sheet.style.transition = "transform .22s ease";
     if(dy>CLOSE_DIST || velocity>CLOSE_VELOCITY){
@@ -1030,7 +1085,7 @@ $("#detailBackdrop").addEventListener("click", closeDetail);
     }
   }
   sheet.addEventListener("pointerdown", onDown);
-  sheet.addEventListener("pointermove", onMove);
+  sheet.addEventListener("pointermove", onMove, {passive:false});
   sheet.addEventListener("pointerup", onUp);
   sheet.addEventListener("pointercancel", onUp);
 })();
