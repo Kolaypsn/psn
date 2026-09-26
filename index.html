@@ -144,7 +144,7 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .tabbar .tabBtn span{font-size:10px;font-weight:600;}
 
 .backdrop{position:fixed;inset:0;background:var(--overlay);z-index:40;}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--surface);border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;padding:14px 18px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow);}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--surface);border-radius:20px 20px 0 0;max-height:80vh;overflow-y:auto;padding:14px 18px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow);}
 .sheet .grabber{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 10px;}
 .modal{position:fixed;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:51;background:var(--surface);border-radius:var(--radius-l);padding:20px;box-shadow:var(--shadow);max-height:86vh;overflow-y:auto;}
 .modal.small{max-width:320px;margin:0 auto;}
@@ -241,11 +241,6 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:70;box-shadow:var(--shadow);max-width:88%;text-align:center;}
 
-.levelRow{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;}
-.levelDot{flex:none;width:38px;height:38px;border-radius:50%;border:none;background:var(--chip-bg);color:var(--chip-text);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;position:relative;}
-.levelDot.current{background:var(--accent);color:#fff;}
-.levelDot.done svg{width:16px;height:16px;}
-.levelDot.locked{opacity:.45;}
 .gameStage{position:relative;border-radius:var(--radius-m);overflow:hidden;background:var(--surface-2);border:1px solid var(--border);touch-action:none;height:300px;}
 .gameStage canvas{width:100%;height:100%;display:block;}
 .gameHud{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;font-family:var(--font-display);font-weight:800;font-size:12.5px;pointer-events:none;}
@@ -377,18 +372,17 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 
   <main class="view" id="gameView" hidden>
     <h2 class="viewTitle">Мой магазин</h2>
-    <p class="muted small">Коснитесь нужной точки на поле — продавец сам туда дойдёт. Дойдите до витрины сверху, заберите телефон и отнесите его клиенту, пока не сжалось кольцо ожидания над его головой. Серии доставок без потерь клиентов дают комбо-бонус к монетам. Пройдите уровень, пока не закончилось время: дальше — больше клиентов и меньше терпения.</p>
-    <div class="levelRow" id="levelRow"></div>
+    <p class="muted small">Коснитесь нужной точки на поле — продавец сам туда дойдёт. Дойдите до витрины сверху, заберите телефон и отнесите его клиенту, пока не сжалось кольцо ожидания над его головой. Серии доставок без потерь клиентов дают комбо-бонус к монетам. Это бесконечная смена без уровней: чем дольше продержитесь, тем больше клиентов и меньше их терпение. Смена закончится, если подряд наберётся слишком много ушедших без покупки — тогда можно сразу начать новую.</p>
     <div class="gameStage" id="gameStage">
       <canvas id="gameCanvas"></canvas>
       <div class="gameHud">
-        <span class="tabular" id="hudProgress">0/0</span>
+        <span class="tabular" id="hudProgress">Обслужено: 0</span>
         <span class="tabular" id="hudCombo"></span>
-        <span class="tabular" id="hudTimer">0с</span>
+        <span class="tabular" id="hudTimer">0:00</span>
       </div>
     </div>
     <p class="gameMsg" id="gameMsg"></p>
-    <button class="btn btn-primary" id="gameActionBtn">Начать уровень</button>
+    <button class="btn btn-primary" id="gameActionBtn">Начать смену</button>
     <h3 style="font-size:15px;margin:18px 0 10px;">Улучшения магазина</h3>
     <div class="upgradeCard">
       <div class="ui"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
@@ -406,6 +400,7 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
       <button id="buyAd"></button>
     </div>
     <h3 style="font-size:15px;margin:18px 0 10px;">Награды и достижения</h3>
+    <p class="muted small" id="playtimeInfo"></p>
     <div id="couponList"></div>
   </main>
 
@@ -976,7 +971,7 @@ async function submitRequest(req){
 /* ---------- STATE ---------- */
 const state = { view:"catalog", seg:"new", family:"all", search:"", sort:"popular" };
 
-function currentSet(){ return state.seg==="used" ? usedModels : newModels; }
+function currentSet(){ const arr = state.seg==="used" ? usedModels : newModels; return arr.filter(m=>!m.hidden); }
 function uniqueFamilies(){ return Array.from(new Set(currentSet().map(m=>m.family))); }
 
 $all("[data-seg]").forEach(b=> b.addEventListener("click", ()=>{ haptic("light"); state.seg=b.dataset.seg; state.family="all"; $all("[data-seg]").forEach(x=>x.classList.toggle("active",x===b)); renderFamilyChips(); renderCatalog(); }));
@@ -1192,8 +1187,11 @@ $("#detailBackdrop").addEventListener("click", closeDetail);
     document.body.style.position=""; document.body.style.top=""; document.body.style.left=""; document.body.style.right=""; document.body.style.width="";
     window.scrollTo(0, savedScrollY);
   }
+  const HANDLE_ZONE = 56; // px от верхнего края карточки — свайп-закрытие реагирует только тут, чтобы не мешать обычному скроллу/тапам по контенту
   function onDown(e){
     if(sheet.hidden || sheet.scrollTop>0 || isInteractive(e.target)) return;
+    const rect = sheet.getBoundingClientRect();
+    if(e.clientY - rect.top > HANDLE_ZONE) return; // не в зоне «ручки» сверху — не начинаем жест закрытия
     dragging=true; startY=e.clientY; dy=0; startTime=Date.now(); pid=e.pointerId;
     lockBodyScroll(); // иначе на телефоне при свайпе вниз вместе с карточкой скроллится и каталог под ней
     try{ sheet.setPointerCapture(pid); }catch(err){}
@@ -1290,7 +1288,7 @@ function switchTab(name){
   ["catalog","favorites","game","sell","contacts"].forEach(v=>{ $("#"+v+"View").hidden = v!==name; });
   $all(".tabBtn").forEach(b=> b.classList.toggle("active", b.dataset.tab===name));
   if(name==="favorites") renderCabinet();
-  if(name==="game") { renderGamePanel(); renderLevelRow(); setupCanvasIfNeeded(); }
+  if(name==="game") { renderGamePanel(); setupCanvasIfNeeded(); }
   if(name==="sell") renderSellView();
   window.scrollTo(0,0);
 }
@@ -1305,30 +1303,42 @@ function confirmDialog(text, onYes, danger){
 }
 $("#confirmBackdrop").addEventListener("click", ()=>{ $("#confirmModal").hidden=true; $("#confirmBackdrop").hidden=true; });
 
-/* ================= PHONE-SHOP RUNNER GAME WITH LEVELS ================= */
+/* ================= PHONE-SHOP RUNNER GAME — БЕСКОНЕЧНАЯ СМЕНА (без уровней) =================
+   Раньше игра была разбита на уровни с фиксированной целью/временем прохождения — по просьбе убрано:
+   теперь это один непрерывный поток покупателей ("смена"), сложность которого плавно растёт по ходу
+   игры (см. currentDifficulty). Смена не заканчивается победой — она идёт, пока продавец не упустит
+   слишком много клиентов подряд (MISS_LIMIT), после чего можно сразу начать новую. */
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-function defaultShop(){ return { coins:0, lifetime:0, helper:0, shelf:0, ad:0, claimed:[], unlockedLevel:1, levelIdx:0 }; }
+function defaultShop(){ return { coins:0, lifetime:0, helper:0, shelf:0, ad:0, claimed:[], playtimeMs:0 }; }
 let shop = safeGet(LS.shop, null) || defaultShop();
+// на случай старого сохранения из версии с уровнями — там не было playtimeMs/claimed в таком виде
+if(typeof shop.playtimeMs!=="number") shop.playtimeMs=0;
+if(!Array.isArray(shop.claimed)) shop.claimed=[];
 function saveShop(){ safeSet(LS.shop, shop); }
 
 const CUSTOMER_COLORS = ["#7b6fa6","#b1454f","#8a6a4e","#4f7d6c","#5c7ea6","#b58a4a"];
-const LEVELS = [
- {target:8,  time:45, maxCustomers:2, spawnInterval:2200, patience:6000},
- {target:10, time:45, maxCustomers:3, spawnInterval:2000, patience:5600},
- {target:12, time:50, maxCustomers:3, spawnInterval:1750, patience:5200},
- {target:14, time:50, maxCustomers:4, spawnInterval:1550, patience:4800},
- {target:16, time:55, maxCustomers:4, spawnInterval:1350, patience:4400},
- {target:20, time:60, maxCustomers:5, spawnInterval:1150, patience:4000}
-];
-/* Пороги наград — в «жизненных» (накопленных, не потраченных) монетах. Ориентир калибровки:
-   рядовой вовлечённый раунд ~150 монет/мин активной игры, так что ~5000 ≈ полчаса игры, ~10000 ≈ час. */
+const MISS_LIMIT = 5;      // столько клиентов подряд можно упустить, прежде чем смена закончится
+const RAMP_SECONDS = 240;  // через сколько секунд смены сложность выходит на «потолок» (дальше не растёт)
+function currentDifficulty(){
+  const t = (G.shiftElapsedMs||0)/1000;
+  const ramp = Math.min(1, t/RAMP_SECONDS);
+  return {
+    maxCustomers: Math.round(2 + ramp*4),         // 2 → 6 одновременно ждущих
+    spawnInterval: Math.round(2200 - ramp*1300),  // 2200мс → 900мс между появлениями
+    patience: Math.round(6200 - ramp*2600)        // 6200мс → 3600мс терпения клиента
+  };
+}
+/* Награды выдаются строго за реальное время активной игры (shop.playtimeMs — копится только пока
+   G.status==="playing", см. startShift), а не за накопленные монеты: раньше порог считался в монетах
+   («~150/мин»), но апгрейды, комбо и неограниченный replay уровней позволяли собрать его в разы быстрее
+   заявленных 30/60 минут. Реальное время нельзя ускорить прокачкой. */
 const ACHIEVEMENTS = [
- {code:"FREESHIP", label:"Бесплатная доставка", desc:"Заработайте 5000 ₽ в игре — это примерно полчаса активной игры", icon:ICON_TRUCK, need:s=>s.lifetime>=5000},
- {code:"FREECABLE", label:"Кабель в подарок", desc:"Заработайте 10000 ₽ в игре — это примерно час активной игры", icon:ICON_CABLE, need:s=>s.lifetime>=10000}
+ {code:"FREESHIP", label:"Бесплатная доставка", desc:"Наберите 30 минут активной игры", icon:ICON_TRUCK, need:s=>s.playtimeMs>=30*60*1000},
+ {code:"FREECABLE", label:"Кабель в подарок", desc:"Наберите 1 час активной игры", icon:ICON_CABLE, need:s=>s.playtimeMs>=60*60*1000}
 ];
 function upgradeCost(base, level){ return Math.round(base*Math.pow(1.55, level)); }
 function playerSpeed(){ return 150 * (1 + shop.helper*0.15); }
-function patienceMs(lv){ return lv.patience * (1 + shop.ad*0.16); }
+function patienceMs(dif){ return dif.patience * (1 + shop.ad*0.16); }
 function coinPerSale(){ return 10 + shop.shelf*5; }
 
 function renderGamePanel(){
@@ -1342,6 +1352,9 @@ function renderGamePanel(){
   renderAchievements();
 }
 function renderAchievements(){
+  const pt = shop.playtimeMs||0, ptMin = Math.floor(pt/60000), ptSec = Math.floor((pt%60000)/1000);
+  const ptEl = $("#playtimeInfo");
+  if(ptEl) ptEl.textContent = "Всего активной игры: "+ptMin+" мин "+String(ptSec).padStart(2,"0")+" сек";
   $("#couponList").innerHTML = ACHIEVEMENTS.map(a=>{
     const claimed = shop.claimed.includes(a.code);
     const reached = a.need(shop);
@@ -1364,27 +1377,11 @@ $("#buyHelper").addEventListener("click", ()=>{ const c=upgradeCost(80,shop.help
 $("#buyShelf").addEventListener("click", ()=>{ const c=upgradeCost(120,shop.shelf); if(shop.coins>=c){ shop.coins-=c; shop.shelf++; saveShop(); renderGamePanel(); haptic("light"); } });
 $("#buyAd").addEventListener("click", ()=>{ const c=upgradeCost(100,shop.ad); if(shop.coins>=c){ shop.coins-=c; shop.ad++; saveShop(); renderGamePanel(); haptic("light"); } });
 
-function renderLevelRow(){
-  $("#levelRow").innerHTML = LEVELS.map((lv,i)=>{
-    const n=i+1, unlocked = n<=shop.unlockedLevel, done = n<shop.unlockedLevel, current = i===shop.levelIdx;
-    const cls = "levelDot"+(current?" current":"")+(!unlocked?" locked":"")+(done?" done":"");
-    return `<button class="${cls}" data-level="${i}">${done?ICON_CHECK:(unlocked?n:ICON_LOCK)}</button>`;
-  }).join("");
-}
-document.addEventListener("click", e=>{
-  const lv=e.target.closest("[data-level]"); if(!lv) return;
-  const i=Number(lv.dataset.level);
-  if(i+1>shop.unlockedLevel){ showToast("Сначала пройдите предыдущий уровень"); return; }
-  if(G.levelStatus==="playing") return;
-  shop.levelIdx=i; saveShop(); renderLevelRow(); resetLevelUI();
-});
-
-const G = { ctx:null, w:0, h:0, raf:null, lastTs:0, levelStatus:"idle", served:0, timeLeft:0, timerInt:null,
+const G = { ctx:null, w:0, h:0, raf:null, lastTs:0, status:"idle", served:0, shiftElapsedMs:0, timerInt:null,
   combo:0, misses:0,
   player:{x:0,y:0,r:13,carrying:false,target:null},
   customers:[], spawnTimer:0 };
 
-function currentLevel(){ return LEVELS[shop.levelIdx]; }
 function shelfRect(){ return {x:0,y:0,w:G.w,h:52}; }
 function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
@@ -1402,67 +1399,52 @@ function setupCanvasIfNeeded(){
   drawGame();
 }
 function handleTap(ev){
-  if(G.levelStatus!=="playing") return;
+  if(G.status!=="playing") return;
   const rect=ev.target.getBoundingClientRect();
   const x=ev.clientX-rect.left, y=ev.clientY-rect.top;
   const p=G.player;
   G.player.target = { x: Math.max(p.r, Math.min(G.w-p.r, x)), y: Math.max(shelfRect().h-6, Math.min(G.h-p.r-4, y)) };
 }
-function resetLevelUI(){
-  G.levelStatus="idle"; G.customers=[]; G.served=0; G.timeLeft=currentLevel().time; G.combo=0; G.misses=0; G.spawnTimer=0;
+function resetShiftUI(){
+  G.status="idle"; G.customers=[]; G.served=0; G.shiftElapsedMs=0; G.combo=0; G.misses=0; G.spawnTimer=0;
   G.player.carrying=false; G.player.target=null; G.player.x=(G.w||0)/2; G.player.y=shelfRect().h+70;
   clearInterval(G.timerInt);
-  $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent="Начать уровень "+(shop.levelIdx+1);
+  $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent="Начать смену";
   $("#gameMsg").textContent=""; $("#gameMsg").className="gameMsg";
   updateHud(); drawGame();
 }
 function updateHud(){
-  $("#hudProgress").textContent = G.served+"/"+currentLevel().target;
-  $("#hudTimer").textContent = Math.max(0,Math.ceil(G.timeLeft))+"с";
+  $("#hudProgress").textContent = "Обслужено: "+G.served;
+  const totalSec = Math.floor(G.shiftElapsedMs/1000);
+  $("#hudTimer").textContent = Math.floor(totalSec/60)+":"+String(totalSec%60).padStart(2,"0");
   const comboEl=$("#hudCombo"); if(comboEl) comboEl.textContent = G.combo>1 ? "×"+G.combo : "";
 }
-$("#gameActionBtn").addEventListener("click", ()=>{
-  if(G.levelStatus==="cleared"){
-    const nextIdx = shop.levelIdx+1;
-    if(nextIdx<LEVELS.length){ shop.levelIdx=nextIdx; if(shop.unlockedLevel<nextIdx+1) shop.unlockedLevel=nextIdx+1; saveShop(); renderLevelRow(); resetLevelUI(); }
-    else { showToast("Все уровни пройдены! Можно переигрывать любой."); resetLevelUI(); }
-    return;
-  }
-  if(G.levelStatus==="failed"){ resetLevelUI(); return; }
-  startLevel();
-});
-function startLevel(){
-  G.levelStatus="playing"; G.customers=[]; G.served=0; G.spawnTimer=0; G.timeLeft=currentLevel().time; G.combo=0; G.misses=0;
+$("#gameActionBtn").addEventListener("click", ()=>{ startShift(); });
+function startShift(){
+  G.status="playing"; G.customers=[]; G.served=0; G.spawnTimer=0; G.shiftElapsedMs=0; G.combo=0; G.misses=0;
   G.player.carrying=false; G.player.target=null; G.player.x=G.w/2; G.player.y=shelfRect().h+70;
   $("#gameActionBtn").hidden=true; $("#gameMsg").textContent=""; $("#gameMsg").className="gameMsg";
   updateHud();
   clearInterval(G.timerInt);
   G.timerInt=setInterval(()=>{
-    if(G.levelStatus!=="playing") return;
-    G.timeLeft -= 1; updateHud();
-    if(G.timeLeft<=0){ failLevel(); }
+    if(G.status!=="playing") return;
+    // копим реальное время активной игры — от него, а не от монет, зависят награды за 30/60 минут (см. ACHIEVEMENTS)
+    shop.playtimeMs = (shop.playtimeMs||0) + 1000; saveShop();
+    renderAchievements(); updateHud();
   },1000);
 }
-function clearLevel(){
-  G.levelStatus="cleared"; clearInterval(G.timerInt);
-  const bonus = Math.max(0,Math.round(G.timeLeft))*2;
-  shop.coins+=bonus; shop.lifetime+=bonus; saveShop(); renderGamePanel();
-  const n=shop.levelIdx+1;
-  if(shop.unlockedLevel<n+1){ shop.unlockedLevel=n+1; saveShop(); renderLevelRow(); }
-  $("#gameMsg").textContent="Уровень пройден! Бонус +"+bonus+" ₽"+(G.misses===0?" · ни один клиент не ушёл!":""); $("#gameMsg").className="gameMsg ok";
-  $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent = (shop.levelIdx+1<LEVELS.length)?"Следующий уровень":"Начать заново";
-  haptic("success"); updateHud();
-}
-function failLevel(){
-  G.levelStatus="failed"; clearInterval(G.timerInt);
-  $("#gameMsg").textContent="Время вышло: "+G.served+"/"+currentLevel().target+". Попробуем ещё раз?"; $("#gameMsg").className="gameMsg bad";
-  $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent="Повторить уровень";
-  haptic("error");
+function endShift(){
+  G.status="ended"; clearInterval(G.timerInt);
+  const totalSec = Math.floor(G.shiftElapsedMs/1000), mins=Math.floor(totalSec/60), secs=totalSec%60;
+  $("#gameMsg").textContent = "Смена окончена — обслужено "+G.served+", продержались "+mins+":"+String(secs).padStart(2,"0")+". Слишком много клиентов ушло без покупки.";
+  $("#gameMsg").className="gameMsg bad";
+  $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent="Начать новую смену";
+  haptic("error"); updateHud();
 }
 function spawnCustomer(){
-  const lv=currentLevel();
+  const dif=currentDifficulty();
   const waiting = G.customers.filter(c=>c.state==="waiting").length;
-  if(waiting >= lv.maxCustomers) return;
+  if(waiting >= dif.maxCustomers) return;
   const shelf=shelfRect();
   let x,y,ok,tries=0;
   do{
@@ -1471,7 +1453,7 @@ function spawnCustomer(){
     ok = G.customers.every(c=> c.state!=="waiting" || Math.hypot(c.x-x,c.y-y)>46);
     tries++;
   } while(!ok && tries<16);
-  const p=patienceMs(lv);
+  const p=patienceMs(dif);
   G.customers.push({id:"c"+Date.now()+Math.random(), x, y, r:13, color:CUSTOMER_COLORS[Math.floor(Math.random()*CUSTOMER_COLORS.length)], patience:p, maxPatience:p, state:"waiting", leftAt:0});
 }
 function updatePlayer(dt){
@@ -1497,7 +1479,6 @@ function updatePlayer(dt){
       shop.coins+=gain; shop.lifetime+=gain; saveShop(); renderGamePanel(); updateHud();
       spawnFloatText("+"+gain+" ₽", c.x, c.y-26);
       haptic("light");
-      if(G.served>=currentLevel().target){ clearLevel(); }
     }
   }
 }
@@ -1510,17 +1491,22 @@ function spawnFloatText(text,x,y){
 }
 function gameLoop(ts){
   const dt=Math.min(60, ts-G.lastTs); G.lastTs=ts;
-  if(G.levelStatus==="playing"){
+  if(G.status==="playing"){
+    G.shiftElapsedMs+=dt;
     G.spawnTimer+=dt;
-    if(G.spawnTimer>currentLevel().spawnInterval){ G.spawnTimer=0; spawnCustomer(); }
+    const dif=currentDifficulty();
+    if(G.spawnTimer>dif.spawnInterval){ G.spawnTimer=0; spawnCustomer(); }
     G.customers.forEach(c=>{
       if(c.state==="waiting"){
         c.patience-=dt;
-        if(c.patience<=0){ c.state="left"; c.leftAt=performance.now(); G.combo=0; G.misses++; updateHud(); }
+        if(c.patience<=0){
+          c.state="left"; c.leftAt=performance.now(); G.combo=0; G.misses++; updateHud();
+          if(G.misses>=MISS_LIMIT) endShift();
+        }
       }
     });
     G.customers = G.customers.filter(c=> c.state==="waiting" || performance.now()-c.leftAt<300);
-    updatePlayer(dt);
+    if(G.status==="playing") updatePlayer(dt);
   }
   drawGame();
   G.raf=requestAnimationFrame(gameLoop);
@@ -1556,7 +1542,7 @@ function drawGame(){
   ctx.fillStyle=text; ctx.font="600 11px sans-serif"; ctx.textAlign="center"; ctx.globalAlpha=.55;
   ctx.fillText("ВИТРИНА — заберите телефон", G.w/2, shelf.h/2+4); ctx.globalAlpha=1;
 
-  if(G.player.target && G.levelStatus==="playing"){
+  if(G.player.target && G.status==="playing"){
     ctx.globalAlpha=.35; ctx.strokeStyle=accent; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.arc(G.player.target.x, G.player.target.y, 9, 0, Math.PI*2); ctx.stroke();
     ctx.globalAlpha=1;
@@ -1651,10 +1637,10 @@ function renderAdminProducts(){
     const catArr = usedModels.includes(m) ? usedModels : newModels;
     const idx = catArr.indexOf(m);
     return `<div class="adminRow">
-      <div class="thumbSm">${hasPhoto?`<img src="${adminThumbPhotos[0].url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`:phoneSvg(m.colors[adminDci].h, m)}</div>
-      <div class="ai"><b>${m.model}${m.isNew?" · новый":""}${m.badgeNew?" · 🆕":""}</b><span>${m.colors.length} цв. · ${m.storages.length} объём(ов) · ${fmt(lo)}${hi!==lo?"–"+fmt(hi):""}${m.media&&(m.media.photos&&m.media.photos.length||m.media.video)?" · 📎 медиа":""}</span></div>
+      <div class="thumbSm" style="${m.hidden?"opacity:.45;":""}">${hasPhoto?`<img src="${adminThumbPhotos[0].url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`:phoneSvg(m.colors[adminDci].h, m)}</div>
+      <div class="ai" style="${m.hidden?"opacity:.55;":""}"><b>${m.model}${m.isNew?" · новый":""}${m.badgeNew?" · 🆕":""}${m.hidden?" · скрыт":""}</b><span>${m.colors.length} цв. · ${m.storages.length} объём(ов) · ${fmt(lo)}${hi!==lo?"–"+fmt(hi):""}${m.media&&(m.media.photos&&m.media.photos.length||m.media.video)?" · 📎 медиа":""}</span></div>
       <input type="number" class="posInput" data-posid="${m.id}" value="${idx+1}" min="1" max="${catArr.length}" title="Позиция в каталоге (1 — первым)">
-      <div class="aBtns"><button data-editp="${m.id}">${ICON_EDIT}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
+      <div class="aBtns"><button data-editp="${m.id}">${ICON_EDIT}</button><button data-togglehiddenp="${m.id}" title="${m.hidden?"Показать в каталоге":"Скрыть из каталога"}">${m.hidden?ICON_CLOSE:ICON_CHECK}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
     </div>`;
   }).join("");
   $("#adminProducts").innerHTML = (rows ? `<p class="hint" style="margin-bottom:8px;">Число слева — позиция товара в каталоге (1 — показывается первым в своей категории «Новые»/«Б/У»). Измените и нажмите Enter или уберите фокус с поля.</p>` : "") + rows + `<button class="btn btn-secondary" id="resetCatalogBtn" style="margin-top:10px;">Сбросить к демо-каталогу</button>`;
@@ -1698,7 +1684,24 @@ document.addEventListener("keydown", e=>{
 });
 document.addEventListener("click", e=>{
   const ed=e.target.closest("[data-editp]"); if(ed) openProductEdit(ed.dataset.editp);
-  const del=e.target.closest("[data-delp]"); if(del) confirmDialog("Удалить эту модель из каталога?", async ()=>{
+  const th=e.target.closest("[data-togglehiddenp]");
+  if(th){
+    const id=th.dataset.togglehiddenp;
+    const isNew = !!newModels.find(x=>x.id===id);
+    const arr = isNew ? newModels : usedModels;
+    const m = arr.find(x=>x.id===id);
+    if(!m) return;
+    m.hidden = !m.hidden;
+    if(isNew) saveNew(arr); else saveUsed(arr);
+    renderAdminProducts(); haptic("selection");
+    showToast(m.hidden ? "Товар скрыт из каталога" : "Товар снова виден в каталоге");
+    (async ()=>{
+      try{ await adminApi("/api/admin/products","PUT",{category:isNew?"new":"used", product:m}); }
+      catch(err){ showToast("Изменено здесь, но не сохранилось на сервере — проверьте связь"); }
+    })();
+    return;
+  }
+  const del=e.target.closest("[data-delp]"); if(del) confirmDialog("Удалить эту модель из каталога безвозвратно? Если нужно временно спрятать товар — используйте кнопку «скрыть» рядом.", async ()=>{
     const id=del.dataset.delp;
     if(usedModels.find(x=>x.id===id)) saveUsed(usedModels.filter(x=>x.id!==id));
     else saveNew(newModels.filter(x=>x.id!==id));
@@ -2073,7 +2076,7 @@ function hideSplash(){
     setTimeout(()=>{ el.classList.add("hide"); setTimeout(()=>{ el.remove(); }, 400); }, wait);
   }catch(e){}
 }
-renderFamilyChips(); renderCatalog(); renderFaq(); updateAdminDot(); resetLevelUI(); renderCachedReviews();
+renderFamilyChips(); renderCatalog(); renderFaq(); updateAdminDot(); resetShiftUI(); renderCachedReviews();
 hideSplash();
 if(shouldShowOnboarding()) setTimeout(openOnboarding, 900);
 initTelegram();
