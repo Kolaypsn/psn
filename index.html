@@ -168,6 +168,7 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .btn-secondary{background:var(--chip-bg);color:var(--text);}
 .btn-danger{background:var(--danger);color:#fff;}
 .btn-ghost{background:none;color:var(--accent);}
+.btn-compact{padding:9px;font-size:13px;margin-top:8px;}
 .btn:disabled{opacity:.5;}
 .btnRow{display:flex;gap:10px;}
 .btnRow .btn{flex:1;}
@@ -332,12 +333,13 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
   <main class="view" id="favoritesView" hidden>
     <h2 class="viewTitle">Личный кабинет</h2>
     <div class="profileCard" id="profileCard"></div>
+    <h3 class="sectionTitle">Избранное</h3>
+    <p class="muted small" style="margin:-6px 0 10px;">На товары в избранном придёт уведомление, если на них изменится цена.</p>
+    <div class="grid" id="favGrid"></div>
+    <p class="empty" id="favEmpty" hidden>Пока пусто. Нажимайте на сердечко у товара, чтобы сохранить его здесь.</p>
     <h3 class="sectionTitle">Мои заявки</h3>
     <div id="myRequests"></div>
     <p class="empty" id="myReqEmpty" hidden>Заявок пока нет — оставьте её в каталоге или во вкладке «Продать».</p>
-    <h3 class="sectionTitle">Избранное</h3>
-    <div class="grid" id="favGrid"></div>
-    <p class="empty" id="favEmpty" hidden>Пока пусто. Нажимайте на сердечко у товара, чтобы сохранить его здесь.</p>
   </main>
 
   <main class="view" id="gameView" hidden>
@@ -393,12 +395,13 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
   <main class="view" id="contactsView" hidden>
     <h2 class="viewTitle">Контакты</h2>
     <div class="contactCard">
-      <div class="row"><span class="muted">Режим работы</span><span>Ежедневно, 10:00–21:00</span></div>
-      <div class="row"><span class="muted">Способ получения</span><span>Курьер по городу / самовывоз</span></div>
-      <div class="row"><span class="muted">Оплата</span><span>Карта, перевод, наличные</span></div>
-      <div class="row"><span class="muted">Гарантия</span><span>14 дней б/у · официальная на новые</span></div>
+      <div class="row"><span class="muted">Режим работы</span><span>Круглосуточно</span></div>
+      <div class="row"><span class="muted">Способ получения</span><span>Личная встреча в Москве/Отправка любой ТК</span></div>
+      <div class="row"><span class="muted">Оплата</span><span>Картой по терминалу, наличными</span></div>
+      <div class="row"><span class="muted">Гарантия</span><span>от 14 дней на б/у · официальная на новые</span></div>
     </div>
     <button class="btn btn-primary" id="contactTgBtn" type="button">Написать в Telegram</button>
+    <button class="btn btn-secondary btn-compact" id="contactChannelBtn" type="button">Канал в Telegram</button>
     <div class="faq" id="faq"></div>
   </main>
 
@@ -471,7 +474,7 @@ const OWNER_TELEGRAM_ID = 2035945496; /* единственный Telegram ID, �
 /* После деплоя воркера впишите сюда его адрес, например "https://psn-api.ваш-акк.workers.dev" */
 const API_BASE = "https://psn-api.psn-store.workers.dev";
 const REVIEWS_CHANNEL_LINK = "https://t.me/appleiphoneoptfeedback"; /* канал с отзывами — кнопка "Все отзывы" ведёт сюда */
-const STORE_CHANNEL_USERNAME = "applepsn"; /* основной канал магазина — кнопка "Написать" на карточке товара ведёт сюда */
+const STORE_CHANNEL_USERNAME = "psnapple"; /* основной канал магазина — кнопка "Канал в Telegram" в разделе Контакты ведёт сюда */
 const OWNER_CHAT_USERNAME = "wbadmm"; /* личный аккаунт владельца — кнопка "Связаться лично" на карточке товара ведёт сюда */
 const LS = { products:"ish_products_v2", favs:"ish_favs_v2", requests:"ish_requests_v1", shop:"ish_shop_v2", reviews:"ish_reviews_v1", onboarded:"ish_onboarded_v1" };
 function safeGet(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
@@ -566,7 +569,15 @@ function compressImageFile(file, maxDim){
         else if(h>w && h>maxDim){ w=Math.round(w*maxDim/h); h=maxDim; }
         const canvas=document.createElement("canvas"); canvas.width=w; canvas.height=h;
         const cctx=canvas.getContext("2d"); cctx.drawImage(img,0,0,w,h);
-        try{ resolve(canvas.toDataURL("image/jpeg",0.82)); }catch(e){ resolve(reader.result); }
+        /* если у фото прозрачный фон (например png без фона), нельзя сохранять его в jpeg — формат
+           не умеет в альфа-канал, а canvas при экспорте в jpeg заливает прозрачные пиксели чёрным.
+           поэтому сперва проверяем, есть ли реально прозрачные пиксели, и если да — сохраняем как png. */
+        let hasAlpha=false;
+        try{
+          const {data} = cctx.getImageData(0,0,w,h);
+          for(let i=3;i<data.length;i+=4){ if(data[i]<255){ hasAlpha=true; break; } }
+        }catch(e){}
+        try{ resolve(hasAlpha ? canvas.toDataURL("image/png") : canvas.toDataURL("image/jpeg",0.82)); }catch(e){ resolve(reader.result); }
       };
       img.onerror=()=>reject(new Error("img"));
       img.src=reader.result;
@@ -660,10 +671,10 @@ function openReviewsChannel(){
     window.open(REVIEWS_CHANNEL_LINK, "_blank");
   }catch(e){}
 }
-function openStoreChat(prefilledText){
+function openStoreChannel(){
   try{
     if(!STORE_CHANNEL_USERNAME) return;
-    const url = `https://t.me/${STORE_CHANNEL_USERNAME}?text=${encodeURIComponent(prefilledText||"")}`;
+    const url = `https://t.me/${STORE_CHANNEL_USERNAME}`;
     if(tg && tg.openTelegramLink){ tg.openTelegramLink(url); return; }
     window.open(url, "_blank");
   }catch(e){}
@@ -679,11 +690,11 @@ function openOwnerChat(prefilledText){
 
 /* ---------- ONBOARDING (первый запуск) ---------- */
 const ONBOARD_SLIDES = [
-  {icon:"👋", title:"Добро пожаловать в PSN", text:"Новые и б/у iPhone с гарантией магазина. Покажем за 20 секунд, как здесь всё устроено."},
+  {icon:"👋", title:"Добро пожаловать в PSN", text:"Новые и б/у iPhone с гарантией. Покажем за 20 секунд, как здесь всё устроено."},
   {icon:"🗂️", title:"Каталог", text:"Переключайтесь между «Новые» и «Б/У» вверху экрана, выбирайте модель — цена и характеристики обновятся сразу."},
   {icon:"📝", title:"Заявка или личный чат", text:"Откройте карточку товара — там можно оставить заявку на покупку или написать нам лично в один клик."},
-  {icon:"💰", title:"Продать свой iPhone", text:"Вкладка «Продать» внизу — короткая форма, мы оценим устройство и сами свяжемся с вами."},
   {icon:"🎮", title:"Бонусная игра", text:"Во вкладке «Игра» зарабатывайте монеты и меняйте их на купоны на скидку в разделе «Кабинет»."},
+  {icon:"💰", title:"Продать свой iPhone", text:"Вкладка «Продать» внизу — короткая форма, мы оценим устройство и сами свяжемся с вами."},
 ];
 let onboardIdx = 0;
 function shouldShowOnboarding(){ return !safeGet(LS.onboarded, false); }
@@ -790,7 +801,7 @@ async function submitRequest(req){
   const list=getRequests(); list.unshift(req); saveRequests(list);
   try{ if(tg && tg.sendData) tg.sendData(JSON.stringify(req)); }catch(err){}
   try{
-    const saved = await apiJson("/api/requests","POST", {type:req.type,title:req.title,price:req.price,condition:req.condition,name:req.name,phone:req.phone,comment:req.comment}, tgInitDataHeader());
+    const saved = await apiJson("/api/requests","POST", {type:req.type,title:req.title,price:req.price,condition:req.condition,name:req.name,phone:req.phone,promo:req.promo,comment:req.comment}, tgInitDataHeader());
     if(saved && saved.id && saved.id!==req.id){
       const l2=getRequests(); const idx=l2.findIndex(r=>r.id===req.id);
       if(idx>-1){ l2[idx]={...l2[idx], id:saved.id}; saveRequests(l2); }
@@ -1035,6 +1046,7 @@ function openRequestModal(m, pk){
     <p class="muted small" style="margin-bottom:12px;">${title} — ${fmt(price)}</p>
     <form id="reqForm">
       <div class="field"><label>Имя</label><input id="reqName" required value="${tgUser?(tgUser.first_name||""):""}"/></div>
+      <div class="field"><label>Промокод (необязательно)</label><input id="reqPromo" placeholder="Если есть"/></div>
       <div class="field"><label>Комментарий</label><textarea id="reqComment" placeholder="Удобное время связи, вопросы…"></textarea></div>
       <button class="btn btn-primary" type="submit" id="reqSubmitBtn">Отправить</button>
     </form>`;
@@ -1042,7 +1054,7 @@ function openRequestModal(m, pk){
   $("#reqCloseBtn").onclick=closeRequestModal;
   $("#reqForm").onsubmit=e=>{
     e.preventDefault();
-    const req={id:"r"+Date.now(),type:"buy",title:title,price:price,name:$("#reqName").value,comment:$("#reqComment").value,date:new Date().toISOString(),status:"new"};
+    const req={id:"r"+Date.now(),type:"buy",title:title,price:price,name:$("#reqName").value,promo:$("#reqPromo").value||null,comment:$("#reqComment").value,date:new Date().toISOString(),status:"new"};
     submitRequest(req);
     haptic("success"); closeRequestModal(); closeDetail(); showToast("Заявка отправлена! Мы скоро свяжемся с вами.");
     updateAdminDot();
@@ -1070,17 +1082,16 @@ $("#sellForm").addEventListener("submit", e=>{
 /* ---------- CONTACTS / FAQ ---------- */
 const FAQ = [
  {q:"Даёте ли вы гарантию?",a:"На б/у устройства — 14 дней гарантии магазина. Новые запечатанные iPhone продаются с официальной гарантией Apple."},
- {q:"Как проверяется состояние iPhone?",a:"Каждый б/у телефон проходит диагностику: экран, батарея, камеры, все датчики и разъёмы, проверка на блокировки iCloud/FMI."},
+ {q:"Как проверяется б/у iPhone?",a:"Каждый б/у телефон проходит ручную диагностику, помимо компьютерной, более 70 пунктов проверки."},
  {q:"Можно ли сдать свой iPhone в счёт покупки?",a:"Да, оставьте заявку во вкладке «Продать» — мы оценим устройство и предложим цену, которую можно зачесть при покупке."},
- {q:"Чем новые устройства отличаются от б/у?",a:"Новые iPhone запечатаны в заводской плёнке, не активировались и продаются с гарантией Apple — раздел «Новые» в каталоге."},
- {q:"Как происходит доставка?",a:"Курьером по городу в день заказа или самовывозом. Оплата — после проверки устройства."}
+ {q:"Где можно посмотреть отзывы?",a:`Отзывы покупателей — в нашем канале <a href="#" id="faqReviewsLink">${REVIEWS_CHANNEL_LINK.replace("https://t.me/","@")}</a>.`},
+ {q:"Как происходит доставка?",a:"Курьером по городу в день заказа или самовывоз. Отправка ТК в день заказа."}
 ];
 function renderFaq(){ $("#faq").innerHTML = FAQ.map((f,i)=>`<div class="faqItem" data-i="${i}"><div class="faqQ">${f.q}${ICON_CHEV}</div><div class="faqA">${f.a}</div></div>`).join(""); }
 document.addEventListener("click", e=>{ const q=e.target.closest(".faqQ"); if(q){ haptic("light"); q.parentElement.classList.toggle("open"); } });
-$("#contactTgBtn").addEventListener("click", ()=>{
-  try{ if(tg && tg.openTelegramLink){ tg.openTelegramLink("https://t.me/"); return; } }catch(e){}
-  showToast("Откройте чат магазина в Telegram");
-});
+document.addEventListener("click", e=>{ if(e.target.closest("#faqReviewsLink")){ e.preventDefault(); openReviewsChannel(); } });
+$("#contactTgBtn").addEventListener("click", ()=>{ openOwnerChat(); });
+$("#contactChannelBtn").addEventListener("click", ()=>{ openStoreChannel(); });
 
 /* ---------- TABS ---------- */
 function switchTab(name){
@@ -1577,7 +1588,8 @@ function openProductEdit(id){
         const dataUrl = await compressImageFile(f, 900);
         try{
           const blob = await dataUrlToBlob(dataUrl);
-          const url = await uploadToServer(blob, (f.name||"photo").replace(/\.[^.]+$/,"")+".jpg");
+          const ext = dataUrl.startsWith("data:image/png") ? ".png" : ".jpg";
+          const url = await uploadToServer(blob, (f.name||"photo").replace(/\.[^.]+$/,"")+ext);
           peMedia.photos.push({url, color:uploadColor});
         }catch(upErr){ peMedia.photos.push({url:dataUrl, color:uploadColor}); usedFallback=true; }
       }
@@ -1646,6 +1658,7 @@ async function renderAdminRequests(){
       <div class="ai">
         <b>${r.type==="sell"?"Выкуп":"Покупка"} · ${r.title}${r.price?" · "+fmt(Number(r.price)):""}</b>
         <span>${r.name?r.name+" · ":""}${r.phone||""}${r.userName?" · TG: "+r.userName:""}</span>
+        ${r.promo?`<span>Промокод: <b>${escHtml(r.promo)}</b></span>`:""}
         <span>${r.comment?r.comment+" · ":""}${new Date(r.date).toLocaleString("ru-RU")}</span>
       </div>
       <div class="aBtns" style="flex-direction:column;gap:6px;align-items:flex-end;">
