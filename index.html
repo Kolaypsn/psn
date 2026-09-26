@@ -183,8 +183,14 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .btnRow{display:flex;gap:10px;}
 .btnRow .btn{flex:1;}
 
-.detailImg{aspect-ratio:1/1;max-width:200px;margin:0 auto 14px;border-radius:var(--radius-m);background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.detailImgWrap{position:relative;max-width:200px;margin:0 auto 14px;}
+.detailImg{aspect-ratio:1/1;max-width:200px;margin:0 auto;border-radius:var(--radius-m);background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .detailImg svg{width:58%;height:58%;}
+.imgNavBtn{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.42);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;}
+.imgNavBtn svg{width:18px;height:18px;}
+.imgNavBtn:active{background:rgba(0,0,0,.62);}
+.imgNavPrev{left:-4px;}
+.imgNavNext{right:-4px;}
 .mediaDots{display:flex;justify-content:center;gap:6px;margin:-6px 0 14px;}
 .mediaDot{width:6px;height:6px;border-radius:50%;background:var(--border);cursor:pointer;}
 .mediaDot.on{background:var(--accent);}
@@ -526,6 +532,8 @@ const ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const ICON_CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const ICON_ARROW_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
 const ICON_ARROW_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>';
+const ICON_CHEVRON_LEFT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+const ICON_CHEVRON_RIGHT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
 const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
 const ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M7 10V7a5 5 0 0110 0v3"/></svg>';
 const ICON_PERCENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>';
@@ -767,6 +775,13 @@ function renderReviews(list){
 $("#reviewsAllBtn").addEventListener("click", e=>{ e.stopPropagation(); openReviewsChannel(); });
 $("#reviewsBlock").addEventListener("click", e=>{ if(!e.target.closest("#reviewsAllBtn")) openReviewsChannel(); });
 function findModel(id){ return allModels().find(m=>m.id===id); }
+/* индекс цвета, который показывается по умолчанию в каталоге и при открытии карточки — задаётся
+   администратором (m.defaultColor, хранится по названию цвета, чтобы не "съезжать" при переупорядочивании
+   списка цветов); если цвет удалили/переименовали или он не задан — используется первый цвет */
+function defaultColorIdx(m){
+  if(m.defaultColor){ const i=m.colors.findIndex(c=>c.n===m.defaultColor); if(i>=0) return i; }
+  return 0;
+}
 
 function priceOf(m, sIdx, cIdx, simIdx){
   const storageD = m.storages[sIdx]?m.storages[sIdx].d:0;
@@ -895,13 +910,14 @@ function photosForColor(m, colorName){
 }
 function cardHtml(m){
   const favs=getFavs();
-  const photos = photosForColor(m, m.colors[0].n);
+  const dci = defaultColorIdx(m);
+  const photos = photosForColor(m, m.colors[dci].n);
   const hasPhoto = photos.length>0;
   return `<div class="card" data-open="${m.id}">
     <div class="thumb">
-      <div class="badges">${m.isNew?'<span class="badge new">Новинка</span>':""}${m.hit?'<span class="badge hit">Хит</span>':""}</div>
+      <div class="badges">${m.badgeNew?'<span class="badge new">Новинка</span>':""}${m.hit?'<span class="badge hit">Хит</span>':""}</div>
       <button class="favBtn" data-fav="${m.id}">${favs.has(m.id)?ICON_HEART_F:ICON_HEART_O}</button>
-      ${hasPhoto?`<img src="${photos[0].url}" alt="${m.model}" style="width:100%;height:100%;object-fit:cover;">`:phoneSvg(m.colors[0].h, m)}
+      ${hasPhoto?`<img src="${photos[0].url}" alt="${m.model}" style="width:100%;height:100%;object-fit:cover;">`:phoneSvg(m.colors[dci].h, m)}
     </div>
     <div class="model">${m.model}</div>
     <div class="spec"><div class="miniSwatches">${m.colors.map(c=>`<span class="miniSwatch" style="background:${c.h}" title="${c.n}"></span>`).join("")}</div>${m.storages.length>1?`<span class="specSep">·</span><span>от ${m.storages[0].l}</span>`:""}</div>
@@ -941,7 +957,7 @@ function renderMyRequests(){
   $("#myRequests").innerHTML = list.map(r=>`
     <div class="myReqRow">
       <div class="mrTop">
-        <div class="mrTitle">${r.type==="sell"?"Выкуп":"Покупка"} · ${r.title}${r.price?" · "+fmt(Number(r.price)):""}</div>
+        <div class="mrTitle">${r.type==="sell"?"Выкуп":"Покупка"} · ${escHtml(r.title)}${r.price?" · "+fmt(Number(r.price)):""}</div>
         <span class="statusPill ${r.status}">${statusLabel(r.status)}</span>
       </div>
       <div class="mrMeta">${new Date(r.date).toLocaleString("ru-RU")}</div>
@@ -968,7 +984,7 @@ let pick = null; // {modelId, colorIdx, storageIdx, condIdx, photoIdx}
 let peMedia = {photos:[], video:null};
 function openPicker(id){
   const m = findModel(id); if(!m) return;
-  pick = {modelId:id, colorIdx:0, storageIdx:0, condIdx: m.conditions.length>1?1:0, simIdx:0, photoIdx:0};
+  pick = {modelId:id, colorIdx:defaultColorIdx(m), storageIdx:0, condIdx: m.conditions.length>1?1:0, simIdx:0, photoIdx:0};
   renderPicker();
   $("#detailSheet").hidden=false; $("#detailBackdrop").hidden=false;
   try{ if(tg && tg.BackButton){ tg.BackButton.show(); tg.BackButton.onClick(closeDetail); } }catch(e){}
@@ -982,10 +998,14 @@ function renderPicker(){
   const hasPhotos = photos.length>0;
   if((pick.photoIdx||0) >= photos.length) pick.photoIdx = 0;
   const mainMedia = hasPhotos ? `<img src="${photos[pick.photoIdx||0].url}" alt="${m.model}" style="width:100%;height:100%;object-fit:cover;">` : phoneSvg(m.colors[pick.colorIdx].h, m);
+  const multiPhoto = hasPhotos && photos.length>1;
   $("#detailSheet").innerHTML = `
     <div class="grabber"></div>
-    <div class="detailImg"${hasPhotos&&photos.length>1?` id="detailImgClick" style="cursor:pointer;"`:""}>${mainMedia}</div>
-    ${hasPhotos&&photos.length>1?`<div class="mediaDots">${photos.map((_,i)=>`<span class="mediaDot ${i===(pick.photoIdx||0)?"on":""}" data-photodot="${i}"></span>`).join("")}</div>`:""}
+    <div class="detailImgWrap">
+      <div class="detailImg">${mainMedia}</div>
+      ${multiPhoto?`<button type="button" class="imgNavBtn imgNavPrev" id="detailImgPrev" aria-label="Предыдущее фото">${ICON_CHEVRON_LEFT}</button><button type="button" class="imgNavBtn imgNavNext" id="detailImgNext" aria-label="Следующее фото">${ICON_CHEVRON_RIGHT}</button>`:""}
+    </div>
+    ${multiPhoto?`<div class="mediaDots">${photos.map((_,i)=>`<span class="mediaDot ${i===(pick.photoIdx||0)?"on":""}" data-photodot="${i}"></span>`).join("")}</div>`:""}
     <div class="detailTitle">${m.model}</div>
     <div class="detailSub muted small">${m.colors[pick.colorIdx].n}${m.storages.length>1?" · "+m.storages[pick.storageIdx].l:""}${hasSims?" · "+m.sims[pick.simIdx].l:""}</div>
     <div class="pickBlock"><label>Цвет</label><div class="swatches" id="pkColors"></div></div>
@@ -1030,8 +1050,14 @@ document.addEventListener("click", e=>{
   if(!pick) return;
   const dot=e.target.closest("[data-photodot]");
   if(dot){ haptic("selection"); pick.photoIdx=Number(dot.dataset.photodot); renderPicker(); return; }
-  const di=e.target.closest("#detailImgClick");
-  if(di){ const m=findModel(pick.modelId); if(m){ const photos=photosForColor(m, m.colors[pick.colorIdx].n); if(photos.length>1){ haptic("selection"); pick.photoIdx=((pick.photoIdx||0)+1)%photos.length; renderPicker(); } } }
+  const prevBtn=e.target.closest("#detailImgPrev"), nextBtn=e.target.closest("#detailImgNext");
+  if(prevBtn||nextBtn){
+    const m=findModel(pick.modelId); if(!m) return;
+    const photos=photosForColor(m, m.colors[pick.colorIdx].n); if(photos.length<2) return;
+    const cur = pick.photoIdx||0;
+    pick.photoIdx = prevBtn ? (cur-1+photos.length)%photos.length : (cur+1)%photos.length;
+    haptic("selection"); renderPicker(); return;
+  }
 });
 function closeDetail(){
   const sheet = $("#detailSheet");
@@ -1509,14 +1535,15 @@ function escapeHtmlClient(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&am
 function renderAdminProducts(){
   const rows = allModels().map(m=>{
     const lo=minPrice(m), hi=priceOf(m, m.storages.length-1, m.conditions.length-1);
-    const adminThumbPhotos = photosForColor(m, m.colors[0].n);
+    const adminDci = defaultColorIdx(m);
+    const adminThumbPhotos = photosForColor(m, m.colors[adminDci].n);
     const hasPhoto = adminThumbPhotos.length>0;
     const catArr = usedModels.includes(m) ? usedModels : newModels;
     const idx = catArr.indexOf(m);
     const isFirst = idx<=0, isLast = idx>=catArr.length-1;
     return `<div class="adminRow">
-      <div class="thumbSm">${hasPhoto?`<img src="${adminThumbPhotos[0].url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`:phoneSvg(m.colors[0].h, m)}</div>
-      <div class="ai"><b>${m.model}${m.isNew?" · новый":""}</b><span>${m.colors.length} цв. · ${m.storages.length} объём(ов) · ${fmt(lo)}${hi!==lo?"–"+fmt(hi):""}${m.media&&(m.media.photos&&m.media.photos.length||m.media.video)?" · 📎 медиа":""}</span></div>
+      <div class="thumbSm">${hasPhoto?`<img src="${adminThumbPhotos[0].url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`:phoneSvg(m.colors[adminDci].h, m)}</div>
+      <div class="ai"><b>${m.model}${m.isNew?" · новый":""}${m.badgeNew?" · 🆕":""}</b><span>${m.colors.length} цв. · ${m.storages.length} объём(ов) · ${fmt(lo)}${hi!==lo?"–"+fmt(hi):""}${m.media&&(m.media.photos&&m.media.photos.length||m.media.video)?" · 📎 медиа":""}</span></div>
       <div class="aBtns"><button data-upp="${m.id}" ${isFirst?"disabled":""} style="${isFirst?"opacity:.3;":""}">${ICON_ARROW_UP}</button><button data-downp="${m.id}" ${isLast?"disabled":""} style="${isLast?"opacity:.3;":""}">${ICON_ARROW_DOWN}</button><button data-editp="${m.id}">${ICON_EDIT}</button><button data-delp="${m.id}">${ICON_TRASH}</button></div>
     </div>`;
   }).join("");
@@ -1572,6 +1599,15 @@ function renderPeUploadColorOptions(){
   sel.innerHTML = `<option value="">Все цвета (общее фото)</option>` + colors.map(c=>`<option value="${escapeHtmlClient(c.n)}">${escapeHtmlClient(c.n)}</option>`).join("");
   sel.value = colors.some(c=>c.n===prev) ? prev : "";
 }
+/* preferName задаётся только при первом открытии формы (текущий m.defaultColor); при последующих
+   вызовах (правка списка цветов) сохраняем то, что уже выбрано в селекте, если цвет всё ещё существует */
+function renderPeDefaultColorOptions(preferName){
+  const sel=$("#peDefaultColor"); if(!sel) return;
+  const colors = currentPeColors();
+  const want = preferName!==undefined ? preferName : sel.value;
+  sel.innerHTML = colors.map(c=>`<option value="${escapeHtmlClient(c.n)}">${escapeHtmlClient(c.n)}</option>`).join("");
+  sel.value = colors.some(c=>c.n===want) ? want : (colors[0] ? colors[0].n : "");
+}
 /* фото группируются по цвету, к которому привязаны (см. normalizePhotos/photosForColor) — так администратор
    видит, каким цветам уже добавлены свои фото, а каким показываются только общие */
 function renderPeMediaPhotos(){
@@ -1611,7 +1647,9 @@ function openProductEdit(id){
     <div class="fieldRow"><div class="field"><label>Год</label><input id="peYear" type="number" value="${m.year}"/></div><div class="field"><label>Базовая цена, ₽</label><input id="peBase" type="number" value="${m.basePrice}"/></div></div>
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;"><input type="checkbox" id="peNew" ${m.isNew?"checked":""}/> Новое запечатанное устройство (без выбора состояния)</label>
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;"><input type="checkbox" id="peHit" ${m.hit?"checked":""}/> Отметить как «Хит»</label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;"><input type="checkbox" id="peBadgeNew" ${m.badgeNew?"checked":""}/> Показывать плашку «Новинка» на карточке в каталоге</label>
     <div class="field"><label>Цвета (по одному в строке: Название|HEX)</label><textarea id="peColors" style="min-height:80px;">${fmtColorsForEdit(m.colors)}</textarea><div class="hint">Пример: Чёрный|#2c2c2e</div></div>
+    <div class="field"><label>Цвет по умолчанию в каталоге</label><select id="peDefaultColor" style="margin-bottom:2px;"></select><div class="hint">Какой цвет и его фото показываются на карточке в каталоге и при открытии, пока покупатель сам не выбрал другой.</div></div>
     <div class="field"><label>Объёмы памяти (по одному в строке: Название|Наценка ₽)</label><textarea id="peStorages" style="min-height:70px;">${fmtStoragesForEdit(m.storages)}</textarea><div class="hint">Первая строка — самый дешёвый вариант, наценка 0</div></div>
     <div class="field"><label>Конфигурация SIM (необязательно, по одной в строке: Название|Наценка ₽)</label><textarea id="peSims" style="min-height:60px;">${fmtSimsForEdit(m.sims)}</textarea><div class="hint">Оставьте пустым, если у товара нет выбора SIM. Пример: Физическая SIM + eSIM|0 и Только eSIM|-3000 — цена меняется вместе с объёмом памяти</div></div>
     <div class="field"><label>Описание</label><textarea id="peDesc">${m.desc||""}</textarea></div>
@@ -1632,8 +1670,9 @@ function openProductEdit(id){
     <button class="btn btn-primary" id="peSaveBtn">Сохранить</button>`;
   $("#productEditModal").hidden=false; $("#editBackdrop").hidden=false;
   renderPeUploadColorOptions(); renderPeMediaPhotos(); renderPeMediaVideo();
+  renderPeDefaultColorOptions(m.defaultColor || (m.colors[0] && m.colors[0].n) || "");
   $("#peCloseBtn").onclick=closeProductEdit;
-  $("#peColors").addEventListener("input", ()=>{ renderPeUploadColorOptions(); renderPeMediaPhotos(); });
+  $("#peColors").addEventListener("input", ()=>{ renderPeUploadColorOptions(); renderPeMediaPhotos(); renderPeDefaultColorOptions(); });
   $("#peImgInput").addEventListener("change", async (e)=>{
     const files = Array.from(e.target.files||[]);
     const uploadColor = $("#peUploadColor").value || null;
@@ -1670,9 +1709,10 @@ function openProductEdit(id){
       id: id || ("m"+Date.now()),
       model:$("#peModel").value.trim()||"iPhone", family:$("#peFamily").value.trim()||$("#peModel").value.trim()||"iPhone",
       year:Number($("#peYear").value)||new Date().getFullYear(), basePrice:Number($("#peBase").value)||0,
-      isNew, hit:$("#peHit").checked, desc:$("#peDesc").value.trim(),
+      isNew, hit:$("#peHit").checked, badgeNew:$("#peBadgeNew").checked, desc:$("#peDesc").value.trim(),
       colors: parseColors($("#peColors").value), storages: parseStorages($("#peStorages").value),
       sims: parseSims($("#peSims").value),
+      defaultColor: $("#peDefaultColor").value || null,
       conditions: isNew?NEW_COND:USED_COND,
       media: { photos: peMedia.photos.slice(), video: peMedia.video }
     };
@@ -1711,10 +1751,11 @@ async function renderAdminRequests(){
   $("#adminRequests").innerHTML = (adminRequestsSource==="local" ? `<p class="muted small" style="margin-bottom:10px;">Сервер недоступен — показаны только заявки с этого устройства.</p>` : "") + list.map(r=>`
     <div class="adminRow" style="align-items:flex-start;">
       <div class="ai">
-        <b>${r.type==="sell"?"Выкуп":"Покупка"} · ${r.title}${r.price?" · "+fmt(Number(r.price)):""}</b>
-        <span>${r.name?r.name+" · ":""}${r.phone||""}${r.userName?" · TG: "+r.userName:""}</span>
+        <b>${r.type==="sell"?"Выкуп":"Покупка"} · ${escHtml(r.title)}${r.price?" · "+fmt(Number(r.price)):""}</b>
+        <span>${r.name?escHtml(r.name)+" · ":""}${escHtml(r.phone||"")}${r.userName?" · TG: "+escHtml(r.userName):""}</span>
         ${r.promo?`<span>Промокод: <b>${escHtml(r.promo)}</b></span>`:""}
-        <span>${r.comment?r.comment+" · ":""}${new Date(r.date).toLocaleString("ru-RU")}</span>
+        ${r.reviewRating?`<span>Оценка клиента: ${"⭐".repeat(r.reviewRating)}</span>`:""}
+        <span>${r.comment?escHtml(r.comment)+" · ":""}${new Date(r.date).toLocaleString("ru-RU")}</span>
       </div>
       <div class="aBtns" style="flex-direction:column;gap:6px;align-items:flex-end;">
         <span class="statusPill ${r.status}" data-cyclestatus="${r.id}">${statusLabel(r.status)}</span>
