@@ -146,6 +146,7 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .backdrop{position:fixed;inset:0;background:var(--overlay);z-index:40;}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--surface);border-radius:20px 20px 0 0;max-height:80vh;overflow-y:auto;padding:14px 18px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow);}
 .sheet .grabber{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 10px;}
+.detailCloseBtn{position:absolute;top:10px;left:14px;z-index:2;width:34px;height:34px;background:var(--surface);box-shadow:var(--shadow);}
 .modal{position:fixed;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:51;background:var(--surface);border-radius:var(--radius-l);padding:20px;box-shadow:var(--shadow);max-height:86vh;overflow-y:auto;}
 .modal.small{max-width:320px;margin:0 auto;}
 #modalBackdrop{z-index:50;}
@@ -1087,11 +1088,25 @@ $("#searchInput").addEventListener("input", e=>{ state.search=e.target.value; re
 /* ---------- VARIANT PICKER SHEET ---------- */
 let pick = null; // {modelId, colorIdx, storageIdx, condIdx, photoIdx}
 let peMedia = {photos:[], video:null};
+/* блокируем скролл страницы под карточкой на всё время, пока она открыта (а не только во
+   время свайпа) — иначе тап/скролл по контенту карточки (не в зоне "ручки" сверху) прокручивал
+   каталог позади неё, потому что тело страницы оставалось не заблокированным */
+let detailScrollLockY = 0;
+function lockBodyScroll(){
+  detailScrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.style.position="fixed"; document.body.style.top=`-${detailScrollLockY}px`;
+  document.body.style.left="0"; document.body.style.right="0"; document.body.style.width="100%";
+}
+function unlockBodyScroll(){
+  document.body.style.position=""; document.body.style.top=""; document.body.style.left=""; document.body.style.right=""; document.body.style.width="";
+  window.scrollTo(0, detailScrollLockY);
+}
 function openPicker(id){
   const m = findModel(id); if(!m) return;
   pick = {modelId:id, colorIdx:defaultColorIdx(m), storageIdx:0, condIdx: m.conditions.length>1?1:0, simIdx:0, photoIdx:0};
   renderPicker();
   $("#detailSheet").hidden=false; $("#detailBackdrop").hidden=false;
+  lockBodyScroll();
   try{ if(tg && tg.BackButton){ tg.BackButton.show(); tg.BackButton.onClick(closeDetail); } }catch(e){}
 }
 function renderPicker(){
@@ -1106,6 +1121,7 @@ function renderPicker(){
   const multiPhoto = hasPhotos && photos.length>1;
   $("#detailSheet").innerHTML = `
     <div class="grabber"></div>
+    <button type="button" class="icon-btn detailCloseBtn" id="detailCloseBtn" aria-label="Закрыть">${ICON_CLOSE}</button>
     <div class="detailImgWrap">
       <div class="detailImg">${mainMedia}</div>
       ${multiPhoto?`<button type="button" class="imgNavBtn imgNavPrev" id="detailImgPrev" aria-label="Предыдущее фото">${ICON_CHEVRON_LEFT}</button><button type="button" class="imgNavBtn imgNavNext" id="detailImgNext" aria-label="Следующее фото">${ICON_CHEVRON_RIGHT}</button>`:""}
@@ -1135,6 +1151,7 @@ function renderPicker(){
   if(m.storages.length>1) $("#pkStorages").innerHTML = m.storages.map((s,i)=>`<button class="pickChip ${i===pick.storageIdx?"sel":""}" data-pk="storage" data-i="${i}">${s.l}</button>`).join("");
   if(hasSims) $("#pkSims").innerHTML = m.sims.map((s,i)=>`<button class="pickChip ${i===pick.simIdx?"sel":""}" data-pk="sim" data-i="${i}">${s.l}</button>`).join("");
   if(m.conditions.length>1) $("#pkConds").innerHTML = m.conditions.map((c,i)=>`<button class="pickChip ${i===pick.condIdx?"sel":""}" data-pk="cond" data-i="${i}">${c.l}</button>`).join("");
+  $("#detailCloseBtn").onclick=closeDetail;
   $("#detailFavBtn").onclick=()=>{ toggleFavSynced(m.id); renderPicker(); renderCatalog(); renderFavorites(); renderProfileCard(); };
   $("#detailBuyBtn").onclick=()=>openRequestModal(m, pick);
   $("#detailChatBtn").onclick=()=>{
@@ -1168,6 +1185,7 @@ function closeDetail(){
   const sheet = $("#detailSheet");
   sheet.style.transition=""; sheet.style.transform="";
   sheet.hidden=true; $("#detailBackdrop").hidden=true;
+  unlockBodyScroll();
   try{ if(tg && tg.BackButton) tg.BackButton.hide(); }catch(e){}
 }
 $("#detailBackdrop").addEventListener("click", closeDetail);
@@ -1176,24 +1194,14 @@ $("#detailBackdrop").addEventListener("click", closeDetail);
 (function setupDetailSwipeClose(){
   const sheet = $("#detailSheet");
   const CLOSE_DIST = 120, CLOSE_VELOCITY = 0.55; // px и px/мс — «сильный» свайп проходит по любому из порогов
-  let dragging=false, startY=0, dy=0, startTime=0, pid=null, savedScrollY=0;
+  let dragging=false, startY=0, dy=0, startTime=0, pid=null;
   function isInteractive(el){ return !!(el && el.closest && el.closest("button, input, select, textarea, a, .swatch, .pickChip, .mediaDot")); }
-  function lockBodyScroll(){
-    savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-    document.body.style.position="fixed"; document.body.style.top=`-${savedScrollY}px`;
-    document.body.style.left="0"; document.body.style.right="0"; document.body.style.width="100%";
-  }
-  function unlockBodyScroll(){
-    document.body.style.position=""; document.body.style.top=""; document.body.style.left=""; document.body.style.right=""; document.body.style.width="";
-    window.scrollTo(0, savedScrollY);
-  }
-  const HANDLE_ZONE = 56; // px от верхнего края карточки — свайп-закрытие реагирует только тут, чтобы не мешать обычному скроллу/тапам по контенту
+  const HANDLE_ZONE = 56; // px от верхнего края карточки — свайп-закрытие реагирует только тут (крестик и тап выше карточки — альтернативные способы закрыть), чтобы не мешать обычному скроллу/тапам/свайпу фото по остальному контенту
   function onDown(e){
     if(sheet.hidden || sheet.scrollTop>0 || isInteractive(e.target)) return;
     const rect = sheet.getBoundingClientRect();
     if(e.clientY - rect.top > HANDLE_ZONE) return; // не в зоне «ручки» сверху — не начинаем жест закрытия
     dragging=true; startY=e.clientY; dy=0; startTime=Date.now(); pid=e.pointerId;
-    lockBodyScroll(); // иначе на телефоне при свайпе вниз вместе с карточкой скроллится и каталог под ней
     try{ sheet.setPointerCapture(pid); }catch(err){}
   }
   function onMove(e){
@@ -1207,7 +1215,6 @@ $("#detailBackdrop").addEventListener("click", closeDetail);
   function onUp(e){
     if(!dragging || e.pointerId!==pid) return;
     dragging=false;
-    unlockBodyScroll();
     const velocity = dy / Math.max(1, Date.now()-startTime);
     sheet.style.transition = "transform .22s ease";
     if(dy>CLOSE_DIST || velocity>CLOSE_VELOCITY){
