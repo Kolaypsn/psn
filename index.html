@@ -1905,13 +1905,14 @@ async function renderAdminRequests(){
     <div class="adminRow" style="align-items:flex-start;">
       <div class="ai">
         <b>${r.type==="sell"?"Выкуп":"Покупка"} · ${escHtml(r.title)}${r.price?" · "+fmt(Number(r.price)):""}</b>
-        <span>${r.name?escHtml(r.name)+" · ":""}${escHtml(r.phone||"")}${r.userName?" · TG: "+escHtml(r.userName):""}</span>
+        <span>${r.name?escHtml(r.name)+" · ":""}${escHtml(r.phone||"")}${r.userName?" · TG: "+escHtml(r.userName):""}${r.username?" (@"+escHtml(r.username)+")":""}</span>
         ${r.promo?`<span>Промокод: <b>${escHtml(r.promo)}</b></span>`:""}
         ${r.reviewRating?`<span>Оценка клиента: ${"⭐".repeat(r.reviewRating)}</span>`:""}
         <span>${r.comment?escHtml(r.comment)+" · ":""}${new Date(r.date).toLocaleString("ru-RU")}</span>
       </div>
       <div class="aBtns" style="flex-direction:column;gap:6px;align-items:flex-end;">
         <span class="statusPill ${r.status}" data-cyclestatus="${r.id}">${statusLabel(r.status)}</span>
+        ${r.username?`<a href="https://t.me/${r.username}" target="_blank" rel="noopener" class="icon-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:18px;" title="Написать в Telegram">💬</a>`:""}
         <button data-delreq="${r.id}">${ICON_TRASH}</button>
       </div>
     </div>`).join("");
