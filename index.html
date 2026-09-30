@@ -88,11 +88,14 @@ button{font-family:inherit;}
 .toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 0 12px;}
 select{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-s);padding:7px 10px;font-size:13px;}
 
-.reviewsBlock{margin:6px 0 14px;cursor:pointer;}
-.reviewsHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.reviewsHead h3{font-size:15px;font-weight:700;margin:0;}
+.reviewsBlock{margin:6px 0 14px;}
+.reviewsHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer;}
+.reviewsHead h3{font-size:15px;font-weight:700;margin:0;display:flex;align-items:center;gap:6px;}
+.reviewsArrow{width:15px;height:15px;flex:none;transition:transform .2s ease;}
+.reviewsBlock.open .reviewsArrow{transform:rotate(180deg);}
 .reviewsAllLink{font-size:12.5px;font-weight:700;color:var(--accent);background:none;border:none;display:flex;align-items:center;gap:3px;}
-.reviewsScroll{display:flex;gap:10px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+.reviewsScroll{display:none;gap:10px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+.reviewsBlock.open .reviewsScroll{display:flex;}
 .reviewCard{flex:none;width:220px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;}
 .reviewCard .rPhoto{width:100%;height:110px;border-radius:var(--radius-s);object-fit:cover;background:var(--surface-2);}
 .reviewCard .rStars{color:var(--gold);font-size:12px;letter-spacing:1px;}
@@ -237,8 +240,10 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
 .faqA{max-height:0;overflow:hidden;color:var(--text-secondary);font-size:13.5px;line-height:1.5;}
 .faqItem.open .faqA{max-height:240px;padding-bottom:14px;}
 .contactCard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:16px;box-shadow:var(--shadow);margin:14px 0;}
-.contactCard .row{display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border);}
+.contactCard .row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border);}
 .contactCard .row:last-child{border-bottom:none;}
+.contactCard .row .muted{flex:none;}
+.contactCard .row span:last-child{flex:1;min-width:0;text-align:right;overflow-wrap:break-word;}
 
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:70;box-shadow:var(--shadow);max-width:88%;text-align:center;}
 
@@ -332,8 +337,8 @@ select{border:1px solid var(--border);background:var(--surface);color:var(--text
     </div>
     <div class="chipsRow" id="familyChips"></div>
     <div class="reviewsBlock" id="reviewsBlock" hidden>
-      <div class="reviewsHead">
-        <h3>Отзывы покупателей</h3>
+      <div class="reviewsHead" id="reviewsHead">
+        <h3>Отзывы покупателей <svg class="reviewsArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></h3>
         <button class="reviewsAllLink" id="reviewsAllBtn">Все отзывы →</button>
       </div>
       <div class="reviewsScroll" id="reviewsScroll"></div>
@@ -876,7 +881,13 @@ function renderReviews(list){
   `).join("");
 }
 $("#reviewsAllBtn").addEventListener("click", e=>{ e.stopPropagation(); openReviewsChannel(); });
-$("#reviewsBlock").addEventListener("click", e=>{ if(!e.target.closest("#reviewsAllBtn")) openReviewsChannel(); });
+/* заголовок блока — сворачивает/разворачивает список отзывов (кнопка "Все отзывы" по-прежнему
+   отдельно ведёт в канал, клик по ней сюда не долетает благодаря stopPropagation выше) */
+$("#reviewsHead").addEventListener("click", e=>{
+  if(e.target.closest("#reviewsAllBtn")) return;
+  $("#reviewsBlock").classList.toggle("open");
+  haptic("light");
+});
 function findModel(id){ return allModels().find(m=>m.id===id); }
 /* индекс цвета, который показывается по умолчанию в каталоге и при открытии карточки — задаётся
    администратором (m.defaultColor, хранится по названию цвета, чтобы не "съезжать" при переупорядочивании
@@ -1438,6 +1449,7 @@ function startShift(){
     // копим реальное время активной игры — от него, а не от монет, зависят награды за 30/60 минут (см. ACHIEVEMENTS)
     shop.playtimeMs = (shop.playtimeMs||0) + 1000; saveShop();
     renderAchievements(); updateHud();
+    if(shop.playtimeMs % 30000 === 0) syncGameTime(); // раз в 30с шлём накопленное время на сервер — для админки
   },1000);
 }
 function endShift(){
@@ -1447,7 +1459,28 @@ function endShift(){
   $("#gameMsg").className="gameMsg bad";
   $("#gameActionBtn").hidden=false; $("#gameActionBtn").textContent="Начать новую смену";
   haptic("error"); updateHud();
+  syncGameTime();
 }
+/* ---------- синхронизация игрового времени с сервером (видно в админке, вкладка "Пользователи") ----------
+   shop.playtimeMs — уже накопленный локально тотал (не время одного захода), поэтому шлём его целиком,
+   а не приращение: сервер хранит максимум из присланного и уже сохранённого, повторная отправка того же
+   значения (например, ретрай) ничего не задвоит. sendBeacon используется при уходе со страницы —
+   обычный fetch в этот момент браузер может не успеть отправить. */
+function syncGameTime(){
+  if(!hasTgIdentity()) return;
+  const seconds = Math.floor((shop.playtimeMs||0)/1000);
+  if(seconds<=0) return;
+  try{
+    if(navigator.sendBeacon){
+      const payload = JSON.stringify({ seconds, initData: (tg && tg.initData) || "" });
+      navigator.sendBeacon(API_BASE+"/api/my/game-time", new Blob([payload], {type:"application/json"}));
+    } else {
+      apiJson("/api/my/game-time","POST",{seconds}, tgInitDataHeader()).catch(()=>{});
+    }
+  }catch(e){}
+}
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden) syncGameTime(); });
+window.addEventListener("pagehide", syncGameTime);
 function spawnCustomer(){
   const dif=currentDifficulty();
   const waiting = G.customers.filter(c=>c.state==="waiting").length;
@@ -1624,11 +1657,13 @@ async function renderAdminUsers(){
   catch(e){ $("#adminUsers").innerHTML = '<p class="empty">Не удалось загрузить список — сервер недоступен.</p>'; return; }
   if(!list.length){ $("#adminUsers").innerHTML = '<p class="empty">Пока никто не открывал приложение.</p>'; return; }
   const fmtDate = d=> { try{ return new Date(d).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}); }catch(e){ return d||""; } };
+  const fmtDuration = s=>{ s=Math.max(0,Math.floor(s||0)); const h=Math.floor(s/3600), m=Math.floor((s%3600)/60); return h>0 ? `${h} ч ${m} мин` : `${m} мин`; };
   $("#adminUsers").innerHTML = `<p class="muted small" style="margin-bottom:10px;">Всего пользователей: ${list.length}</p>` + list.map(u=>`
     <div class="adminRow" style="align-items:flex-start;">
       <div class="ai">
         <b>${u.name?escapeHtmlClient(u.name):"Без имени"}${u.username?" · @"+escapeHtmlClient(u.username):""}</b>
-        <span>Заявок: ${u.requestsCount||0} · В избранном: ${u.favoritesCount||0} · Визитов: ${u.visits||0}</span>
+        <span>Заявок: ${u.requestsCount||0} · В избранном: ${u.favoritesCount||0} · Визитов: ${u.visits||0} · В игре: ${fmtDuration(u.gameSeconds)}</span>
+        ${u.favoriteModels && u.favoriteModels.length ? `<span>Избранное: ${u.favoriteModels.map(escapeHtmlClient).join(", ")}</span>` : ""}
         <span>Впервые: ${fmtDate(u.firstSeen)} · Был(а): ${fmtDate(u.lastSeen)}</span>
       </div>
       ${u.username?`<div class="aBtns"><a href="https://t.me/${u.username}" target="_blank" rel="noopener" class="icon-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:18px;">💬</a></div>`:""}
